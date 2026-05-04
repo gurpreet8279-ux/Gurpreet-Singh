@@ -36,9 +36,8 @@ const tiers = [
 ];
 
 const vehicleUpcharges = [
-  { type: "Mid-size SUV", price: "+$24.99", desc: "e.g., Honda CR-V, Toyota RAV4" },
-  { type: "Standard SUV", price: "+$34.99", desc: "e.g., Ford Explorer, Jeep Grand Cherokee" },
-  { type: "Big SUV / Truck", price: "+$39.99", desc: "e.g., Chevy Tahoe, Ford F-150, Minivans" },
+  { type: "A Mid-Size SUV", price: "+CA$25.00", desc: "e.g., Honda CR-V, Toyota RAV4" },
+  { type: "A Large SUV / Truck / Van", price: "+CA$40.00", desc: "e.g., Chevy Tahoe, Ford F-150, Minivans" },
 ];
 
 export function Pricing() {
@@ -63,23 +62,12 @@ export function Pricing() {
           {tiers.map((tier) => (
             <div
               key={tier.id}
-              className={cn(
-                tier.mostPopular ? 'ring-2 ring-gold-500 bg-zinc-900/80 shadow-2xl shadow-gold-900/20' : 'ring-1 ring-zinc-800 bg-zinc-950/50',
-                'rounded-sm p-8 xl:p-10 transition-transform hover:scale-[1.02] relative'
-              )}
+              className="ring-1 ring-zinc-800 bg-zinc-950/50 rounded-sm p-8 xl:p-10 transition-transform hover:scale-[1.02] relative"
             >
-              {tier.mostPopular ? (
-                <p className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 bg-gold-500 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-black rounded-full shadow-lg whitespace-nowrap">
-                  Limited Time Promo
-                </p>
-              ) : null}
               <div className="flex items-center justify-between gap-x-4">
                 <h3
                   id={tier.id}
-                  className={cn(
-                     tier.mostPopular ? 'text-gold-400' : 'text-white',
-                    'text-xl font-semibold leading-8 font-heading tracking-wide'
-                  )}
+                  className="text-white text-xl font-semibold leading-8 font-heading tracking-wide"
                 >
                   {tier.name}
                 </h3>
@@ -87,20 +75,12 @@ export function Pricing() {
               <p className="mt-4 text-sm leading-6 text-zinc-400">{tier.description}</p>
               <p className="mt-6 flex items-baseline gap-x-1">
                 <span className="text-4xl font-bold tracking-tight text-white">{tier.price}</span>
-                {tier.originalPrice && (
-                  <span className="text-lg font-medium text-zinc-500 line-through ml-2">{tier.originalPrice}</span>
-                )}
                 <span className="text-sm font-semibold leading-6 text-zinc-400">/car</span>
               </p>
               <a
                 href={tier.href}
                 aria-describedby={tier.id}
-                className={cn(
-                  tier.mostPopular
-                    ? 'bg-gold-500 text-black hover:bg-gold-400 shadow-sm'
-                    : 'bg-white/10 text-white hover:bg-white/20',
-                  'mt-6 block rounded-none px-3 py-3 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500 uppercase tracking-widest transition-colors'
-                )}
+                className="bg-white/10 text-white hover:bg-white/20 mt-6 block rounded-none px-3 py-3 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500 uppercase tracking-widest transition-colors"
               >
                 Book This Package
               </a>

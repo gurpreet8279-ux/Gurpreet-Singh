@@ -1,30 +1,54 @@
 import React, { useState } from "react";
-import { CheckCircle2, Calendar, Clock, ChevronRight } from "lucide-react";
-import { format, addDays, startOfToday } from "date-fns";
+import { CheckCircle2, Calendar as CalendarIcon, Clock, ChevronRight } from "lucide-react";
+import { format, startOfToday } from "date-fns";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/style.css";
 import { cn } from "../lib/utils";
 
 const TIME_SLOTS = ["08:00 AM", "10:30 AM", "01:00 PM", "03:30 PM"];
 
 export function BookingForm() {
   const [submitted, setSubmitted] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
-  // Generate next 7 days starting from tomorrow
   const today = startOfToday();
-  const availableDates = Array.from({ length: 7 }).map((_, i) => addDays(today, i + 1));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedDate || !selectedTime) return;
     
-    // In a real app, this would send data to a backend or CRM.
-    setSubmitted(true);
-    setTimeout(() => {
-        setSubmitted(false);
-        setSelectedDate(null);
-        setSelectedTime(null);
-    }, 5000);
+    setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+    
+    data.date = format(selectedDate, 'EEEE, MMMM do, yyyy');
+    data.time = selectedTime;
+    data._subject = `New Booking Request from ${data.name}`;
+
+    try {
+      await fetch("https://formsubmit.co/ajax/durhamscrowndetailing@gmail.com", {
+        method: "POST",
+        headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      
+      setSubmitted(true);
+      setTimeout(() => {
+          setSubmitted(false);
+          setSelectedDate(undefined);
+          setSelectedTime(null);
+      }, 8000);
+    } catch (error) {
+      console.error(error);
+      alert("There was an error submitting the form. Please try again or contact us directly.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -45,44 +69,60 @@ export function BookingForm() {
             <div className="bg-zinc-900/80 border border-gold-500/30 p-8 rounded-sm text-center flex flex-col items-center animate-in fade-in zoom-in duration-300">
                <CheckCircle2 className="w-16 h-16 text-gold-500 mb-4" />
                <h3 className="text-2xl font-heading text-white font-bold mb-2">Booking Confirmed!</h3>
-               <p className="text-zinc-400 text-lg">
-                 Your appointment is scheduled for {selectedDate && format(selectedDate, 'EEEE, MMMM do')} at {selectedTime}.
-                 We will see you then!
+               <p className="text-zinc-400 text-lg mb-4">
+                 Your appointment is scheduled for <span className="text-gold-400 font-semibold">{selectedDate && format(selectedDate, 'EEEE, MMMM do')} at {selectedTime}</span>.
+               </p>
+               <p className="text-zinc-500 text-sm">
+                 We've sent a notification to our team and will see you then!
                </p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="bg-zinc-900 p-8 rounded-sm border border-zinc-800 shadow-xl flex flex-col gap-10">
               
+              {/* Fake field for spam prevention via formsubmit */}
+              <input type="text" name="_honey" style={{ display: 'none' }} />
+              <input type="hidden" name="_captcha" value="false" />
+              <input type="hidden" name="_template" value="table" />
+              
               {/* Step 1: Select Date */}
               <div>
                  <div className="flex items-center gap-2 mb-4">
-                    <Calendar className="w-5 h-5 text-gold-500" />
+                    <CalendarIcon className="w-5 h-5 text-gold-500" />
                     <h3 className="text-lg font-heading font-medium text-white">1. Select Date</h3>
                  </div>
-                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                   {availableDates.map(date => {
-                     const isSelected = selectedDate?.getTime() === date.getTime();
-                     return (
-                       <button
-                         key={date.toISOString()}
-                         type="button"
-                         onClick={() => { setSelectedDate(date); setSelectedTime(null); }}
-                         className={cn(
-                           "flex flex-col items-center justify-center p-3 rounded-sm border transition-all",
-                           isSelected 
-                             ? "bg-gold-500 border-gold-500 text-black shadow-lg" 
-                             : "bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-gold-500/50 hover:bg-zinc-900"
-                         )}
-                       >
-                         <span className={cn("text-xs uppercase tracking-wider font-semibold", isSelected ? "text-black/80" : "text-zinc-500")}>
-                           {format(date, 'EEE')}
-                         </span>
-                         <span className="text-xl font-bold mt-1">
-                           {format(date, 'd')}
-                         </span>
-                       </button>
-                     );
-                   })}
+                 
+                 <div className="bg-zinc-950 border border-zinc-800 rounded-sm p-4 text-white flex justify-center custom-calendar-wrapper">
+                    <style>
+                      {`
+                        .custom-calendar-wrapper .rdp {
+                          --rdp-accent-color: #D4AF37;
+                          --rdp-background-color: rgba(212, 175, 55, 0.1);
+                          --rdp-day_button: 40px;
+                          --rdp-selected-border: 2px solid var(--rdp-accent-color);
+                          --rdp-outline: 2px solid var(--rdp-accent-color);
+                          margin: 0;
+                        }
+                        .custom-calendar-wrapper .rdp-day_selected, 
+                        .custom-calendar-wrapper .rdp-day_selected:focus-visible, 
+                        .custom-calendar-wrapper .rdp-day_selected:hover {
+                          color: black;
+                          background-color: var(--rdp-accent-color);
+                        }
+                        .custom-calendar-wrapper .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+                           background-color: var(--rdp-background-color);
+                        }
+                        .custom-calendar-wrapper .rdp-day_disabled {
+                           opacity: 0.3;
+                        }
+                      `}
+                    </style>
+                    <DayPicker
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => { setSelectedDate(date); setSelectedTime(null); }}
+                      disabled={[{ before: today }]}
+                      showOutsideDays={false}
+                    />
                  </div>
               </div>
 
@@ -195,9 +235,8 @@ export function BookingForm() {
                           className="block w-full border-0 bg-zinc-950 px-3.5 py-3.5 text-white shadow-sm ring-1 ring-inset ring-zinc-800 focus:ring-2 focus:ring-inset focus:ring-gold-500 sm:text-sm sm:leading-6 transition-all"
                         >
                           <option>Car / Coupe / Sedan</option>
-                          <option>Mid-size SUV (+24.99)</option>
-                          <option>Standard SUV (+34.99)</option>
-                          <option>Big SUV / Truck(+39.99)</option>
+                          <option>A Mid-Size SUV (+CA$25.00)</option>
+                          <option>A Large SUV / Truck / Van (+CA$40.00)</option>
                         </select>
                       </div>
                     </div>
@@ -240,9 +279,10 @@ export function BookingForm() {
                   <div className="mt-10">
                     <button
                       type="submit"
-                      className="block w-full bg-gold-500 px-3.5 py-4 text-center text-sm font-bold text-black shadow-lg hover:bg-gold-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500 uppercase tracking-widest transition-all hover:-translate-y-1"
+                      disabled={isSubmitting}
+                      className="block w-full bg-gold-500 px-3.5 py-4 text-center text-sm font-bold text-black shadow-lg hover:bg-gold-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500 uppercase tracking-widest transition-all hover:-translate-y-1 disabled:opacity-70 disabled:hover:translate-y-0"
                     >
-                      Confirm Booking for {selectedTime}
+                      {isSubmitting ? "Submitting..." : `Confirm Booking for ${selectedTime}`}
                     </button>
                   </div>
                 </div>

@@ -14,7 +14,6 @@ export default function App() {
       
       <main>
         <Hero />
-        <About />
         
         {/* Simple Services summary before Pricing can be good, or just rely on hero features. We'll use a visual break. */}
         <section id="services" className="bg-zinc-950 py-16 border-y border-zinc-900">
@@ -27,6 +26,9 @@ export default function App() {
         </section>
 
         <Pricing />
+        
+        <About />
+        
         <BookingForm />
       </main>
 
