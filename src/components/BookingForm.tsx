@@ -26,6 +26,7 @@ export function BookingForm() {
     data.date = format(selectedDate, 'EEEE, MMMM do, yyyy');
     data.time = selectedTime;
     data._subject = `New Booking Request from ${data.name}`;
+    data._autoresponse = `Thank you for choosing Durham's Crown Mobile Detailing! We have received your booking request for ${data.date} at ${data.time}. One of our team members will contact you shortly to officially confirm your appointment.`;
 
     try {
       // Using FormSubmit for email notifications (works on Netlify too)
