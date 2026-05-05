@@ -32,11 +32,21 @@ export function Hero() {
               </span>
             </a>
           </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="mt-6 mb-2"
+          >
+            <span className="text-gold-500 font-semibold tracking-widest uppercase text-sm">
+              From Durham, For Durham
+            </span>
+          </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="mt-10 font-heading text-5xl font-bold tracking-tight text-white sm:text-7xl shadow-black drop-shadow-xl"
+            className="mt-4 font-heading text-5xl font-bold tracking-tight text-white sm:text-7xl shadow-black drop-shadow-xl"
           >
             Royalty Treatment <br/> For Your Vehicle
           </motion.h1>

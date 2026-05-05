@@ -253,9 +253,9 @@ export function BookingForm() {
                           name="package"
                           className="block w-full border-0 bg-zinc-950 px-3.5 py-3.5 text-white shadow-sm ring-1 ring-inset ring-zinc-800 focus:ring-2 focus:ring-inset focus:ring-gold-500 sm:text-sm sm:leading-6 transition-all"
                         >
-                          <option>Basic Wash ($69)</option>
-                          <option>Standard Wash ($99)</option>
-                          <option>Premium Detail ($149)</option>
+                          <option>Silver Package ($179.99)</option>
+                          <option>Gold Package ($199.99)</option>
+                          <option>Platinum Package ($249.99)</option>
                           <option>The Crown Jewel PROMO ($199)</option>
                         </select>
                       </div>

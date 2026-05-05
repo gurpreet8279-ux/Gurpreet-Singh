@@ -3,34 +3,63 @@ import { cn } from "../lib/utils";
 
 const tiers = [
   {
-    name: 'Basic Wash',
-    id: 'tier-basic',
+    name: 'Silver Package',
+    id: 'tier-silver',
     href: '#booking',
-    price: '$69',
-    description: 'A quick and efficient exterior wash to keep your car looking fresh.',
-    features: ['Exterior Foam Hand Wash', 'Wheel & Tire Light Cleaning', 'Window Wipe Down (Out)', 'Quick Interior Vacuum'],
+    price: '$179.99',
+    description: 'Refresh your ride inside and out. Gives your vehicle a deep clean and a sleek finish—perfect for regular maintenance or getting your car ready for a special occasion. (Duration 1.5 - 2 Hours)',
+    features: [
+      'Full exterior wash for a clean, shiny finish',
+      'Detailed wheel and rim cleaning',
+      'Door jambs wiped down and cleaned',
+      'Interior vacuum (seats, carpets, mats, and trunk)',
+      'All interior surfaces wiped and cleaned (dash, panels, cupholders, etc.)',
+      'Interior and exterior windows cleaned for clear visibility'
+    ],
   },
   {
-    name: 'Standard Wash',
-    id: 'tier-standard',
+    name: 'Gold Package',
+    id: 'tier-gold',
     href: '#booking',
-    price: '$99',
-    description: 'A thorough exterior and basic interior cleaning for regular maintenance.',
-    features: ['Everything in Basic Wash', 'Tire Shine', 'Window Cleaning (In/Out)', 'Interior Vacuum & Wipe Down'],
+    price: 'Starts at $199.99',
+    description: 'Add more shine and protection to your vehicle. The Gold Package includes everything from the Silver Package, plus premium extras to take your car’s care to the next level.',
+    features: [
+      'Full exterior wash',
+      'Detailed wheel and rim cleaning',
+      'Door jambs cleaned',
+      'Interior vacuum (seats, carpets, mats, and trunk)',
+      'Interior surface wipe-down (dash, panels, cupholders, etc.)',
+      'Interior and exterior window cleaning',
+      'Tire dressing for a glossy, like-new look',
+      'Steam-cleaned air vents',
+      'Interior panels dressed for a clean finish and UV protection',
+      'Underbody rinse to remove built-up debris'
+    ],
   },
   {
-    name: 'Premium Detail',
+    name: 'Platinum Package',
     id: 'tier-premium',
     href: '#booking',
-    price: '$149',
-    description: 'Deep cleaning with added protection for both interior and exterior.',
+    price: 'Starts at $249.99',
+    description: 'The ultimate care for your vehicle. This top-tier package includes everything from the Gold Package plus exclusive upgrades to give your car the best treatment possible.',
     features: [
-      'Everything in Standard Wash',
-      'Spray Wax Application',
-      'Thorough Interior Vacuum & Dusting',
-      'UV Protection on Plastics',
-      'Leather Cleaning & Conditioning',
-      'Door Jambs Cleaned'
+      'Full, meticulous exterior wash to restore shine',
+      'Detailed wheel and rim cleaning',
+      'Door jambs thoroughly cleaned',
+      'Deep interior vacuum (seats, carpets, mats, trunk)',
+      'All interior panels cleaned (dash, doors, cupholders, etc.)',
+      'Interior and exterior windows cleaned for crystal-clear visibility',
+      'Underbody rinse to remove debris',
+      'Tire dressing for a glossy finish',
+      'Steam-cleaned air vents',
+      'Interior panels dressed for protection and shine',
+      'Interior leather cleaned',
+      'Steam clean entire interior for deep refresh',
+      'Leather conditioning to restore and protect',
+      'Carpet and seat shampoo to refresh upholstery',
+      'Stain removal for a spotless interior',
+      'Paint sealant for long-lasting protection and shine',
+      'Rubber floor mats shined and dressed for durability and appearance'
     ],
   },
 ];
@@ -74,7 +103,7 @@ export function Pricing() {
               </div>
               <p className="mt-4 text-sm leading-6 text-zinc-400">{tier.description}</p>
               <p className="mt-6 flex items-baseline gap-x-1">
-                <span className="text-4xl font-bold tracking-tight text-white">{tier.price}</span>
+                <span className={cn("font-bold tracking-tight text-white", tier.price.includes('Starts at') ? "text-2xl" : "text-4xl")}>{tier.price}</span>
                 <span className="text-sm font-semibold leading-6 text-zinc-400">/car</span>
               </p>
               <a
@@ -104,18 +133,19 @@ export function Pricing() {
            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
               <div className="lg:w-2/3">
                  <h3 className="text-3xl font-bold font-heading tracking-wide text-gold-400">The Crown Jewel</h3>
-                 <p className="mt-2 text-lg text-zinc-300">Our top-tier signature full detail service. The absolute best for your vehicle.</p>
+                 <p className="mt-2 text-lg text-zinc-300">Our Interior Promotion Package. (Duration 1.5 - 2 Hours)</p>
                  <ul role="list" className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm leading-6 text-zinc-300">
-                    <li className="flex gap-x-3"><Check className="h-5 w-5 flex-none text-gold-500" /> Everything in Premium Detail</li>
-                    <li className="flex gap-x-3"><Check className="h-5 w-5 flex-none text-gold-500" /> High-Grade Paste Wax / Sealant</li>
-                    <li className="flex gap-x-3"><Check className="h-5 w-5 flex-none text-gold-500" /> Carpet & Seat Shampoo</li>
-                    <li className="flex gap-x-3"><Check className="h-5 w-5 flex-none text-gold-500" /> Clay Bar Treatment</li>
+                    <li className="flex gap-x-3 items-start"><Check className="h-5 w-5 flex-none text-gold-500 mt-0.5" /> Deep vacuum, steam clean (Vents included) & shampoo</li>
+                    <li className="flex gap-x-3 items-start"><Check className="h-5 w-5 flex-none text-gold-500 mt-0.5" /> All panels & tight areas fully detailed</li>
+                    <li className="flex gap-x-3 items-start"><Check className="h-5 w-5 flex-none text-gold-500 mt-0.5" /> Leather/Plastic cleaned & conditioned</li>
+                    <li className="flex gap-x-3 items-start"><Check className="h-5 w-5 flex-none text-gold-500 mt-0.5" /> Salt & stain treatment throughout</li>
+                    <li className="flex gap-x-3 items-start"><Check className="h-5 w-5 flex-none text-gold-500 mt-0.5" /> Minimal pet hair included (excessive may be extra)</li>
                  </ul>
+                 <p className="mt-4 text-xs italic text-zinc-500">*Subject to an additional charge based on vehicle size*</p>
               </div>
               <div className="lg:w-1/3 flex flex-col lg:items-end">
                 <p className="flex items-baseline gap-x-2 lg:justify-end">
-                  <span className="text-5xl font-bold tracking-tight text-white">$199</span>
-                  <span className="text-xl font-medium text-zinc-500 line-through">$249</span>
+                  <span className="text-3xl font-bold tracking-tight text-white">Starts at $199.99</span>
                 </p>
                 <p className="text-sm font-semibold leading-6 text-zinc-400 mt-1">/car</p>
                 <a
