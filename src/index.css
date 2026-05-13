@@ -1,16 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", sans-serif;
-  --font-heading: "Cinzel", serif;
-  --color-gold-400: #F3E5AB;
-  --color-gold-500: #D4AF37;
-  --color-gold-600: #AA8C2C;
+  --font-heading: "Playfair Display", serif;
+  /* Luxurious Champagne Gold Palette */
+  --color-gold-300: #F9F1D8;
+  --color-gold-400: #E6D090;
+  --color-gold-500: #C4A24D;
+  --color-gold-600: #9E8036;
+  --color-gold-700: #7A6225;
+  /* Deep, rich blacks */
+  --color-zinc-950: #050505;
+  --color-zinc-900: #111111;
 }
 
 body {
-  background-color: #09090b; /* zinc-950 */
+  background-color: var(--color-zinc-950);
   color: #f8fafc; /* slate-50 */
   font-family: var(--font-sans);
 }
@@ -21,16 +27,16 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 
 /* Custom scrollbar for a polished look */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #09090b; 
+  background: var(--color-zinc-950); 
 }
 ::-webkit-scrollbar-thumb {
-  background: #3f3f46; 
-  border-radius: 4px;
+  background: #222222; 
+  border-radius: 0px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #D4AF37; 
+  background: var(--color-gold-500); 
 }
 

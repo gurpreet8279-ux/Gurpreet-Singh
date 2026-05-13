@@ -41,14 +41,14 @@ export function Navigation() {
         </div>
         <div className="hidden lg:flex lg:gap-x-12">
           {navLinks.map((item) => (
-            <a key={item.name} href={item.href} className="text-sm font-semibold leading-6 text-zinc-300 hover:text-gold-500 transition-colors uppercase tracking-wider">
+            <a key={item.name} href={item.href} className="text-xs font-medium leading-6 text-zinc-300 hover:text-gold-400 transition-colors uppercase tracking-[0.2em]">
               {item.name}
             </a>
           ))}
         </div>
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          <a href="#booking" className="text-sm font-semibold leading-6 text-black bg-gold-500 px-6 py-2.5 rounded-none hover:bg-gold-400 transition-colors uppercase tracking-wider">
-            Book Now <span aria-hidden="true">&rarr;</span>
+          <a href="#booking" className="text-[10px] font-semibold leading-6 text-gold-300 border border-gold-500/50 px-6 py-2 rounded-none hover:bg-gold-500 hover:text-black hover:border-gold-500 transition-all uppercase tracking-[0.2em]">
+            Reserve Now
           </a>
         </div>
       </nav>

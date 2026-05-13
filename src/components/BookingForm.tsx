@@ -237,8 +237,8 @@ export function BookingForm() {
                           className="block w-full border-0 bg-zinc-950 px-3.5 py-3.5 text-white shadow-sm ring-1 ring-inset ring-zinc-800 focus:ring-2 focus:ring-inset focus:ring-gold-500 sm:text-sm sm:leading-6 transition-all"
                         >
                           <option>Car / Coupe / Sedan</option>
-                          <option>A Mid-Size SUV (+CA$25.00)</option>
-                          <option>A Large SUV / Truck / Van (+CA$40.00)</option>
+                          <option>A Mid-Size SUV (+CA$24.99)</option>
+                          <option>A Large SUV / Truck / Van (+CA$39.99)</option>
                         </select>
                       </div>
                     </div>
@@ -282,7 +282,7 @@ export function BookingForm() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="block w-full bg-gold-500 px-3.5 py-4 text-center text-sm font-bold text-black shadow-lg hover:bg-gold-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500 uppercase tracking-widest transition-all hover:-translate-y-1 disabled:opacity-70 disabled:hover:translate-y-0"
+                      className="block w-full bg-gold-600/20 border border-gold-500/50 text-gold-300 hover:bg-gold-500 hover:text-black hover:border-gold-500 px-3.5 py-4 text-center text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500 uppercase tracking-[0.2em] transition-all disabled:opacity-50 disabled:hover:bg-gold-600/20 disabled:hover:text-gold-300"
                     >
                       {isSubmitting ? "Submitting..." : `Request Booking for ${selectedTime}`}
                     </button>

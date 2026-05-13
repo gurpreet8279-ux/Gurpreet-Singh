@@ -65,8 +65,8 @@ const tiers = [
 ];
 
 const vehicleUpcharges = [
-  { type: "A Mid-Size SUV", price: "+CA$25.00", desc: "e.g., Honda CR-V, Toyota RAV4" },
-  { type: "A Large SUV / Truck / Van", price: "+CA$40.00", desc: "e.g., Chevy Tahoe, Ford F-150, Minivans" },
+  { type: "A Mid-Size SUV", price: "+CA$24.99", desc: "e.g., Honda CR-V, Toyota RAV4" },
+  { type: "A Large SUV / Truck / Van", price: "+CA$39.99", desc: "e.g., Chevy Tahoe, Ford F-150, Minivans" },
 ];
 
 export function Pricing() {
@@ -91,33 +91,33 @@ export function Pricing() {
           {tiers.map((tier) => (
             <div
               key={tier.id}
-              className="ring-1 ring-zinc-800 bg-zinc-950/50 rounded-sm p-8 xl:p-10 transition-transform hover:scale-[1.02] relative"
+              className="border border-gold-600/20 bg-zinc-950/40 backdrop-blur-sm rounded-none p-8 xl:p-10 transition-all hover:scale-[1.02] hover:border-gold-500/50 hover:shadow-[0_0_40px_rgba(196,162,77,0.1)] relative"
             >
               <div className="flex items-center justify-between gap-x-4">
                 <h3
                   id={tier.id}
-                  className="text-white text-xl font-semibold leading-8 font-heading tracking-wide"
+                  className="text-white text-2xl font-normal leading-8 font-heading tracking-wide"
                 >
                   {tier.name}
                 </h3>
               </div>
-              <p className="mt-4 text-sm leading-6 text-zinc-400">{tier.description}</p>
-              <p className="mt-6 flex items-baseline gap-x-1">
-                <span className={cn("font-bold tracking-tight text-white", tier.price.includes('Starts at') ? "text-2xl" : "text-4xl")}>{tier.price}</span>
-                <span className="text-sm font-semibold leading-6 text-zinc-400">/car</span>
+              <p className="mt-4 text-sm leading-relaxed text-zinc-400 font-light">{tier.description}</p>
+              <p className="mt-6 flex items-baseline gap-x-1 border-b border-white/5 pb-6">
+                <span className={cn("font-medium tracking-tight text-gold-300 font-heading", tier.price.includes('Starts at') ? "text-2xl" : "text-4xl")}>{tier.price}</span>
+                <span className="text-sm font-medium leading-6 text-zinc-500 uppercase tracking-widest ml-2">/ car</span>
               </p>
               <a
                 href={tier.href}
                 aria-describedby={tier.id}
-                className="bg-white/10 text-white hover:bg-white/20 mt-6 block rounded-none px-3 py-3 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500 uppercase tracking-widest transition-colors"
+                className="bg-transparent border border-gold-500/30 text-gold-400 hover:bg-gold-500/10 mt-6 block rounded-none px-3 py-4 text-center text-xs font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500 uppercase tracking-[0.2em] transition-all"
               >
-                Book This Package
+                Reserve This Package
               </a>
-              <ul role="list" className="mt-8 space-y-3 text-sm leading-6 text-zinc-300 xl:mt-10">
+              <ul role="list" className="mt-8 space-y-4 text-sm leading-6 text-zinc-300 xl:mt-10 font-light">
                 {tier.features.map((feature) => (
                   <li key={feature} className="flex gap-x-3">
-                    <Check className="h-6 w-5 flex-none text-gold-500" aria-hidden="true" />
-                    {feature}
+                    <Check className="h-5 w-5 flex-none text-gold-600/70" aria-hidden="true" />
+                    <span className="opacity-90">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -126,51 +126,50 @@ export function Pricing() {
         </div>
 
         {/* Limited Time Promo Separate Section */}
-        <div className="mx-auto mt-16 max-w-4xl rounded-sm ring-2 ring-gold-500 bg-zinc-900/80 shadow-2xl shadow-gold-900/20 p-8 sm:p-10 relative isolate transition-transform hover:scale-[1.01]">
-           <p className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 bg-gold-500 px-4 py-1 text-sm font-semibold uppercase tracking-widest text-black rounded-full shadow-lg whitespace-nowrap">
-             Limited Time Offer
-           </p>
-           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+        <div className="mx-auto mt-24 max-w-4xl bg-zinc-950/60 border border-gold-500/30 shadow-2xl relative isolate transition-all hover:scale-[1.01] hover:border-gold-500/50 hover:shadow-[0_0_50px_rgba(196,162,77,0.15)] p-0">
+           <div className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 bg-zinc-950 border border-gold-500/30 px-6 py-2 text-xs font-medium uppercase tracking-[0.2em] text-gold-400 shadow-xl whitespace-nowrap">
+             Exquisite Limited Offer
+           </div>
+           <div className="p-8 sm:p-12 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
               <div className="lg:w-2/3">
-                 <h3 className="text-3xl font-bold font-heading tracking-wide text-gold-400">The Crown Jewel</h3>
-                 <p className="mt-2 text-lg text-zinc-300">Our Interior Promotion Package. (Duration 1.5 - 2 Hours)</p>
-                 <ul role="list" className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm leading-6 text-zinc-300">
-                    <li className="flex gap-x-3 items-start"><Check className="h-5 w-5 flex-none text-gold-500 mt-0.5" /> Deep vacuum, steam clean (Vents included) & shampoo</li>
-                    <li className="flex gap-x-3 items-start"><Check className="h-5 w-5 flex-none text-gold-500 mt-0.5" /> All panels & tight areas fully detailed</li>
-                    <li className="flex gap-x-3 items-start"><Check className="h-5 w-5 flex-none text-gold-500 mt-0.5" /> Leather/Plastic cleaned & conditioned</li>
-                    <li className="flex gap-x-3 items-start"><Check className="h-5 w-5 flex-none text-gold-500 mt-0.5" /> Salt & stain treatment throughout</li>
-                    <li className="flex gap-x-3 items-start"><Check className="h-5 w-5 flex-none text-gold-500 mt-0.5" /> Minimal pet hair included (excessive may be extra)</li>
+                 <h3 className="text-4xl font-normal font-heading tracking-wide text-gold-400">The Crown Jewel</h3>
+                 <p className="mt-3 text-lg text-zinc-300 font-light">Our Interior Promotion Package. <span className="text-zinc-500 text-base">(Duration 1.5 - 2 Hours)</span></p>
+                 <ul role="list" className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm leading-6 text-zinc-300 font-light">
+                    <li className="flex gap-x-3 items-start"><Check className="h-5 w-5 flex-none text-gold-600/70 mt-0.5" /> <span className="opacity-90">Deep vacuum, steam clean (Vents included) & shampoo</span></li>
+                    <li className="flex gap-x-3 items-start"><Check className="h-5 w-5 flex-none text-gold-600/70 mt-0.5" /> <span className="opacity-90">All panels & tight areas fully detailed</span></li>
+                    <li className="flex gap-x-3 items-start"><Check className="h-5 w-5 flex-none text-gold-600/70 mt-0.5" /> <span className="opacity-90">Leather/Plastic cleaned & conditioned</span></li>
+                    <li className="flex gap-x-3 items-start"><Check className="h-5 w-5 flex-none text-gold-600/70 mt-0.5" /> <span className="opacity-90">Salt & stain treatment throughout</span></li>
+                    <li className="flex gap-x-3 items-start"><Check className="h-5 w-5 flex-none text-gold-600/70 mt-0.5" /> <span className="opacity-90">Minimal pet hair included (excessive may be extra)</span></li>
                  </ul>
-                 <p className="mt-4 text-xs italic text-zinc-500">*Subject to an additional charge based on vehicle size*</p>
+                 <p className="mt-6 text-xs text-zinc-500 tracking-wider">* Subject to an additional charge based on vehicle size</p>
               </div>
-              <div className="lg:w-1/3 flex flex-col lg:items-end">
+              <div className="lg:w-1/3 flex flex-col lg:items-end border-t border-white/5 lg:border-t-0 lg:border-l lg:pl-8 pt-8 lg:pt-0">
                 <p className="flex items-baseline gap-x-2 lg:justify-end">
-                  <span className="text-3xl font-bold tracking-tight text-white">Starts at $199.99</span>
+                  <span className="text-3xl font-medium font-heading tracking-tight text-white mb-2">Starts at $199.99</span>
                 </p>
-                <p className="text-sm font-semibold leading-6 text-zinc-400 mt-1">/car</p>
                 <a
                   href="#booking"
-                  className="mt-6 w-full lg:w-auto bg-gold-500 text-black hover:bg-gold-400 block rounded-none px-8 py-3 text-center text-sm font-bold uppercase tracking-widest transition-colors"
+                  className="mt-6 w-full lg:w-auto bg-gold-600/20 border border-gold-500/50 text-gold-300 hover:bg-gold-500 hover:text-black hover:border-gold-500 block rounded-none px-8 py-4 text-center text-xs font-semibold uppercase tracking-[0.2em] transition-all"
                 >
-                  Book Promo
+                  Reserve Promo
                 </a>
               </div>
            </div>
         </div>
 
         {/* Vehicle Size Upcharges */}
-        <div className="mx-auto mt-20 max-w-4xl bg-zinc-900 border border-zinc-800 p-8 rounded-sm">
-           <h3 className="text-2xl font-bold font-heading text-white text-center mb-6">Additional Charges For Vehicle Size</h3>
-           <p className="text-center text-zinc-400 mb-8 max-w-2xl mx-auto">
+        <div className="mx-auto mt-24 max-w-4xl bg-zinc-950/30 border border-zinc-800/50 p-8 sm:p-12 rounded-none">
+           <h3 className="text-2xl font-normal font-heading text-gold-300 text-center mb-4">Additional Charges For Vehicle Size</h3>
+           <p className="text-center text-zinc-400 font-light text-sm mb-10 max-w-2xl mx-auto leading-relaxed">
              Larger vehicles require more time and product to achieve our standard of perfection. 
              The following upcharges apply to all packages above based on vehicle size.
            </p>
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
               {vehicleUpcharges.map((charge) => (
-                <div key={charge.type} className="bg-zinc-950 p-6 rounded-sm border border-zinc-800 text-center flex flex-col justify-center">
-                  <h4 className="text-lg font-semibold text-white mb-2">{charge.type}</h4>
-                  <div className="text-2xl font-bold text-gold-400 mb-2">{charge.price}</div>
-                  <p className="text-sm text-zinc-500">{charge.desc}</p>
+                <div key={charge.type} className="bg-black/50 p-8 rounded-none border border-gold-600/10 text-center flex flex-col justify-center transition-all hover:bg-zinc-950/80">
+                  <h4 className="text-base font-medium text-white mb-3 tracking-wide">{charge.type}</h4>
+                  <div className="text-2xl font-heading text-gold-400 mb-3">{charge.price}</div>
+                  <p className="text-xs text-zinc-500 font-light tracking-wide">{charge.desc}</p>
                 </div>
               ))}
            </div>
