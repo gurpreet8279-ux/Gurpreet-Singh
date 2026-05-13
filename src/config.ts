@@ -9,10 +9,9 @@
  */
 
 export const AVAILABLE_TIME_SLOTS = [
-  "08:00 AM", 
-  "10:30 AM", 
-  "01:00 PM", 
-  "03:30 PM"
-  // You can add or remove times here. 
-  // Example: "05:00 PM",
+  "07:00 AM", 
+  "09:00 AM", 
+  "12:00 PM", 
+  "03:00 PM",
+  "05:00 PM"
 ];
