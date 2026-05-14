@@ -53,6 +53,33 @@ export function BookingForm() {
     }
   };
 
+  const isTimeSlotAvailable = (timeStr: string) => {
+    if (!selectedDate) return false;
+    
+    const now = new Date();
+    const isTodayFlag = format(selectedDate, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd');
+    
+    if (!isTodayFlag) return true;
+
+    // Parse time string (HH:mm AM/PM)
+    const [time, modifier] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+
+    if (modifier === 'PM' && hours !== 12) {
+      hours += 12;
+    }
+    if (modifier === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    const slotDate = new Date(selectedDate);
+    slotDate.setHours(hours, minutes, 0, 0);
+
+    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+
+    return slotDate > oneHourFromNow;
+  };
+
   return (
     <div id="booking" className="bg-zinc-950 py-24 sm:py-32 border-t border-zinc-900">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -138,16 +165,20 @@ export function BookingForm() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {AVAILABLE_TIME_SLOTS.map(time => {
                       const isSelected = selectedTime === time;
+                      const isAvailable = isTimeSlotAvailable(time);
                       return (
                         <button
                           key={time}
                           type="button"
+                          disabled={!isAvailable}
                           onClick={() => setSelectedTime(time)}
                           className={cn(
                             "py-3 px-4 rounded-sm border text-sm font-semibold tracking-wide transition-all",
                             isSelected 
                               ? "bg-gold-500 border-gold-500 text-black shadow-lg" 
-                              : "bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-gold-500/50 hover:bg-zinc-900"
+                              : isAvailable
+                                ? "bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-gold-500/50 hover:bg-zinc-900"
+                                : "bg-zinc-900 border-zinc-900 text-zinc-600 cursor-not-allowed opacity-50"
                           )}
                         >
                           {time}
