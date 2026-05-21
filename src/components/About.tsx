@@ -1,4 +1,4 @@
-import { ShieldCheck, Target, Award } from "lucide-react";
+import { ShieldCheck, Target, Award, Star } from "lucide-react";
 
 export function About() {
   return (
@@ -14,6 +14,18 @@ export function About() {
             We are dedicated to providing the highest level of automotive care across the Durham Region, including Pickering, Ajax, Whitby, Oshawa, and surrounding areas. 
             We believe that your vehicle is an extension of yourself, and it deserves to be treated like royalty right in your own driveway.
           </p>
+          
+          <div className="mt-8 flex flex-col items-center justify-center gap-3">
+             <div className="flex items-center gap-1.5 text-gold-400">
+                <Star className="h-4 w-4 fill-current" />
+                <Star className="h-4 w-4 fill-current" />
+                <Star className="h-4 w-4 fill-current" />
+                <Star className="h-4 w-4 fill-current" />
+                <Star className="h-4 w-4 fill-current" />
+                <span className="text-white text-sm font-medium ml-2">5.0 ★ Rated on Google</span>
+             </div>
+             <p className="text-sm text-zinc-500 font-medium">Proudly Serving: Oshawa • Whitby • Ajax • Pickering</p>
+          </div>
         </div>
 
         <div className="mx-auto mt-20 max-w-2xl sm:mt-24 lg:max-w-none">
