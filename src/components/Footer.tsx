@@ -5,9 +5,9 @@ export function Footer() {
     <footer className="bg-black py-16 border-t border-zinc-900 overflow-hidden relative">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-gold-900/10 via-black to-black"></div>
       <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
-        <div className="md:flex md:items-center md:justify-between">
-          <div className="flex justify-center flex-col md:flex-row items-center md:justify-start gap-4">
-             <div className="flex items-center gap-3 group">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-start">
+          <div className="flex justify-center flex-col md:flex-row items-center lg:items-start lg:justify-start gap-4">
+             <div className="flex items-center gap-3">
                <img src="/logo.png" alt="Durham's Crown Logo" className="h-20 w-auto object-contain" onError={(e) => {
                  (e.target as HTMLImageElement).style.display = 'none';
                  const fallback = document.getElementById('footer-logo-fallback');
@@ -18,7 +18,7 @@ export function Footer() {
                 <span className="text-[10px] tracking-[0.2em] text-gold-500 font-medium uppercase">Mobile Detailing</span>
               </div>
             </div>
-            <div className="mt-4 md:mt-0 text-center md:text-left text-sm leading-6 text-zinc-400 md:ml-8 max-w-md">
+            <div className="mt-4 md:mt-0 text-center md:text-left text-sm leading-6 text-zinc-400 md:ml-8 max-w-sm">
               <p>Bringing royalty-level auto detailing directly to your driveway.</p>
               <p className="mt-3 text-gold-500 font-medium flex items-center justify-center md:justify-start gap-2">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -33,22 +33,29 @@ export function Footer() {
                 </svg>
                 437-663-3998
               </p>
+              <div className="mt-6 flex justify-center md:justify-start space-x-6">
+                <a href="https://www.facebook.com/share/1B27QoKmWf/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-gold-500 transition-colors">
+                  <span className="sr-only">Facebook</span>
+                  <Facebook className="h-6 w-6" aria-hidden="true" />
+                </a>
+                <a href="https://www.instagram.com/durhams_crown_mobile_detailing?igsh=dHgwM2NpZHFxczd2&utm_source=qr" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-gold-500 transition-colors">
+                  <span className="sr-only">Instagram</span>
+                  <Instagram className="h-6 w-6" aria-hidden="true" />
+                </a>
+              </div>
             </div>
           </div>
           
-          <div className="mt-8 flex justify-center space-x-6 md:mt-0">
-            <a href="https://www.facebook.com/share/1B27QoKmWf/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-gold-500 transition-colors">
-              <span className="sr-only">Facebook</span>
-              <Facebook className="h-6 w-6" aria-hidden="true" />
-            </a>
-            <a href="https://www.instagram.com/durhams_crown_mobile_detailing?igsh=dHgwM2NpZHFxczd2&utm_source=qr" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-gold-500 transition-colors">
-              <span className="sr-only">Instagram</span>
-              <Instagram className="h-6 w-6" aria-hidden="true" />
-            </a>
-            <a href="#" className="text-zinc-500 hover:text-gold-500 transition-colors">
-              <span className="sr-only">X</span>
-              <Twitter className="h-6 w-6" aria-hidden="true" />
-            </a>
+          <div className="w-full lg:w-[400px] lg:ml-auto h-[250px] md:h-[300px] overflow-hidden rounded-sm border border-zinc-800">
+             <iframe 
+               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d734520.8607131632!2d-79.48541772361224!3d44.016804430443344!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2a51231a10bdead%3A0x715308980520b29e!2sDurham%E2%80%99s%20Crown%20Mobile%20Detailing!5e0!3m2!1sen!2sca!4v1779768010319!5m2!1sen!2sca" 
+               width="100%" 
+               height="100%" 
+               style={{ border: 0 }} 
+               allowFullScreen={false} 
+               loading="lazy" 
+               referrerPolicy="no-referrer-when-downgrade"
+             ></iframe>
           </div>
         </div>
         <div className="mt-8 border-t border-zinc-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-zinc-500">
