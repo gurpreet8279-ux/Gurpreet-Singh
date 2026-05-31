@@ -14,43 +14,17 @@ export function BookingForm() {
 
   const today = startOfToday();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!selectedDate || !selectedTime) return;
-    
-    setIsSubmitting(true);
-    const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData.entries());
-    
-    // Format the date/time nicely
-    data.date = format(selectedDate, 'EEEE, MMMM do, yyyy');
-    data.time = selectedTime;
-    data._subject = `New Booking Request from ${data.name}`;
-    data._autoresponse = `Thank you for choosing Durham's Crown Mobile Detailing! We have received your booking request for ${data.date} at ${data.time}. One of our team members will contact you shortly to officially confirm your appointment.`;
-
-    try {
-      // Using FormSubmit for email notifications (works on Netlify too)
-      await fetch("https://formsubmit.co/ajax/durhamscrowndetailing@gmail.com", {
-        method: "POST",
-        headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
-      
-      setSubmitted(true);
-      setTimeout(() => {
-          setSubmitted(false);
-          setSelectedDate(undefined);
-          setSelectedTime(null);
-      }, 8000);
-    } catch (error) {
-      console.error(error);
-      alert("There was an error submitting the form. Please try again or contact us directly at durhamscrowndetailing@gmail.com.");
-    } finally {
-      setIsSubmitting(false);
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (!selectedDate || !selectedTime) {
+      e.preventDefault();
+      alert("Please select both a date and a time block before submitting.");
+      return;
     }
+    setIsSubmitting(true);
+    // Let the standard HTML form submission proceed to FormSubmit
+    // so that it handles the email activation and captcha if required.
+    // The browser will redirect to formsubmit.co and then back to our site.
+    setTimeout(() => setIsSubmitting(false), 5000); // Re-enable button after a few seconds
   };
 
   const isTimeSlotAvailable = (timeStr: string) => {
@@ -106,13 +80,19 @@ export function BookingForm() {
                </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="bg-zinc-900 p-8 rounded-sm border border-zinc-800 shadow-xl flex flex-col gap-10">
+            <form action="https://formsubmit.co/durhamscrowndetailing@gmail.com" method="POST" onSubmit={handleFormSubmit} className="bg-zinc-900 p-8 rounded-sm border border-zinc-800 shadow-xl flex flex-col gap-10">
               
-              {/* Fake field for spam prevention via formsubmit */}
+              {/* FormSubmit Configuration */}
               <input type="text" name="_honey" style={{ display: 'none' }} />
-              <input type="hidden" name="_captcha" value="false" />
-              <input type="hidden" name="_template" value="table" />
+              <input type="hidden" name="_captcha" value="true" />
+              <input type="hidden" name="_template" value="box" />
               
+              {/* Force redirect back to booking form area (using window.location.href dynamically is hard in raw HTML, so we rely on relative or absolute if known. Assuming standard root since this is an SPA.) */}
+              <input type="hidden" name="_next" value="https://durhamscrownmobiledetailing.com/" />
+              <input type="hidden" name="_subject" value={`New Booking Request for ${selectedDate ? format(selectedDate, 'MMM do') : ''}`} />
+              <input type="hidden" name="Service_Date" value={selectedDate ? format(selectedDate, 'EEEE, MMMM do, yyyy') : ''} />
+              <input type="hidden" name="Service_Time" value={selectedTime || ''} />
+
               {/* Step 1: Select Date */}
               <div>
                  <div className="flex items-center gap-2 mb-4">
