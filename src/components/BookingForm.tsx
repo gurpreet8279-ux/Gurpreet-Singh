@@ -14,7 +14,7 @@ export function BookingForm() {
 
   const today = startOfToday();
 
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!selectedDate || !selectedTime) {
@@ -24,11 +24,44 @@ export function BookingForm() {
     
     setIsSubmitting(true);
     
-    // Mocking an API submission
-    setTimeout(() => {
-      setSubmitted(true);
+    const formData = new FormData(e.currentTarget);
+    
+    // Web3Forms required fields
+    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || "fea02e2e-c9c0-463e-a4f1-8cb7a88fe74e";
+    
+    formData.append("access_key", accessKey);
+    formData.append("subject", `New Booking Request from ${formData.get("name")}`);
+    formData.append("from_name", "Durham's Crown Mobile Detailing Bookings");
+    
+    // Formatted date and time
+    formData.append("Service_Date", format(selectedDate, 'EEEE, MMMM do, yyyy'));
+    formData.append("Service_Time", selectedTime);
+
+    const object = Object.fromEntries(formData);
+    const json = JSON.stringify(object);
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json"
+          },
+          body: json
+      });
+      const result = await response.json();
+      if (result.success) {
+          setSubmitted(true);
+      } else {
+          console.error(result);
+          alert(`Submission failed: ${result.message || 'Please try again.'}`);
+      }
+    } catch (error) {
+        console.error(error);
+        alert("Something went wrong! Please check your connection and try again.");
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
 
   const isTimeSlotAvailable = (timeStr: string) => {
