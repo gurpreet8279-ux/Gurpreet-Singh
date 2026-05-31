@@ -15,16 +15,43 @@ export function BookingForm() {
   const today = startOfToday();
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
     if (!selectedDate || !selectedTime) {
-      e.preventDefault();
       alert("Please select both a date and a time block before submitting.");
       return;
     }
+    
     setIsSubmitting(true);
-    // Let the standard HTML form submission proceed to FormSubmit
-    // so that it handles the email activation and captcha if required.
-    // The browser will redirect to formsubmit.co and then back to our site.
-    setTimeout(() => setIsSubmitting(false), 5000); // Re-enable button after a few seconds
+    
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+    
+    const dateStr = format(selectedDate, 'EEEE, MMMM do, yyyy');
+    const subject = `New Booking Request: ${data.name} on ${dateStr}`;
+    
+    let body = `Hello Durham's Crown Mobile Detailing,\n\nI would like to request a booking.\n\n`;
+    body += `Name: ${data.name}\n`;
+    body += `Phone: ${data.phone}\n`;
+    body += `Email: ${data.email}\n`;
+    body += `Date: ${dateStr}\n`;
+    body += `Time: ${selectedTime}\n`;
+    body += `Vehicle: ${data['vehicle-make']} (${data['vehicle-type']})\n`;
+    body += `Package: ${data.package}\n`;
+    body += `Address: ${data.address}\n\n`;
+    body += `Please confirm this appointment.\n\nThank you,\n${data.name}`;
+
+    const mailtoLink = `mailto:durhamscrowndetailing@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    window.location.href = mailtoLink;
+    
+    setSubmitted(true);
+    setTimeout(() => {
+        setSubmitted(false);
+        setIsSubmitting(false);
+        setSelectedDate(undefined);
+        setSelectedTime(null);
+    }, 5000);
   };
 
   const isTimeSlotAvailable = (timeStr: string) => {
@@ -80,19 +107,8 @@ export function BookingForm() {
                </p>
             </div>
           ) : (
-            <form action="https://formsubmit.co/durhamscrowndetailing@gmail.com" method="POST" onSubmit={handleFormSubmit} className="bg-zinc-900 p-8 rounded-sm border border-zinc-800 shadow-xl flex flex-col gap-10">
+            <form onSubmit={handleFormSubmit} className="bg-zinc-900 p-8 rounded-sm border border-zinc-800 shadow-xl flex flex-col gap-10">
               
-              {/* FormSubmit Configuration */}
-              <input type="text" name="_honey" style={{ display: 'none' }} />
-              <input type="hidden" name="_captcha" value="true" />
-              <input type="hidden" name="_template" value="box" />
-              
-              {/* Force redirect back to booking form area (using window.location.href dynamically is hard in raw HTML, so we rely on relative or absolute if known. Assuming standard root since this is an SPA.) */}
-              <input type="hidden" name="_next" value="https://durhamscrownmobiledetailing.com/" />
-              <input type="hidden" name="_subject" value={`New Booking Request for ${selectedDate ? format(selectedDate, 'MMM do') : ''}`} />
-              <input type="hidden" name="Service_Date" value={selectedDate ? format(selectedDate, 'EEEE, MMMM do, yyyy') : ''} />
-              <input type="hidden" name="Service_Time" value={selectedTime || ''} />
-
               {/* Step 1: Select Date */}
               <div>
                  <div className="flex items-center gap-2 mb-4">
@@ -295,7 +311,7 @@ export function BookingForm() {
                       disabled={isSubmitting}
                       className="block w-full bg-gold-600/20 border border-gold-500/50 text-gold-300 hover:bg-gold-500 hover:text-black hover:border-gold-500 px-3.5 py-4 text-center text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500 uppercase tracking-[0.2em] transition-all disabled:opacity-50 disabled:hover:bg-gold-600/20 disabled:hover:text-gold-300"
                     >
-                      {isSubmitting ? "Submitting..." : `Request Booking for ${selectedTime}`}
+                      {isSubmitting ? "Generating Email..." : `Send Booking Request via Email`}
                     </button>
                   </div>
                 </div>
