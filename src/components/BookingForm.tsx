@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { CheckCircle2, Calendar as CalendarIcon, Clock, ChevronRight } from "lucide-react";
+import { CheckCircle2, Calendar as CalendarIcon, Clock, ChevronRight, Copy, Mail } from "lucide-react";
 import { format, startOfToday } from "date-fns";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
@@ -7,7 +7,7 @@ import { cn } from "../lib/utils";
 import { AVAILABLE_TIME_SLOTS } from "../config";
 
 export function BookingForm() {
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState<{subject: string, body: string} | false>(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -43,15 +43,17 @@ export function BookingForm() {
 
     const mailtoLink = `mailto:durhamscrowndetailing@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     
+    // Copy to clipboard fallback for users without default mail clients
+    try {
+      navigator.clipboard.writeText(body);
+    } catch (err) {
+      console.error('Failed to copy to clipboard', err);
+    }
+
     window.location.href = mailtoLink;
     
-    setSubmitted(true);
-    setTimeout(() => {
-        setSubmitted(false);
-        setIsSubmitting(false);
-        setSelectedDate(undefined);
-        setSelectedTime(null);
-    }, 5000);
+    setSubmitted({ subject, body });
+    setIsSubmitting(false);
   };
 
   const isTimeSlotAvailable = (timeStr: string) => {
@@ -97,14 +99,41 @@ export function BookingForm() {
         <div className="mx-auto mt-16 max-w-2xl sm:mt-20">
           {submitted ? (
             <div className="bg-zinc-900/80 border border-gold-500/30 p-8 rounded-sm text-center flex flex-col items-center animate-in fade-in zoom-in duration-300">
-               <CheckCircle2 className="w-16 h-16 text-gold-500 mb-4" />
-               <h3 className="text-2xl font-heading text-white font-bold mb-2">Booking Requested!</h3>
-               <p className="text-zinc-400 text-lg mb-4">
-                 Your appointment is requested for <span className="text-gold-400 font-semibold">{selectedDate && format(selectedDate, 'EEEE, MMMM do')} at {selectedTime}</span>.
+               <Mail className="w-16 h-16 text-gold-500 mb-4" />
+               <h3 className="text-2xl font-heading text-white font-bold mb-2">Request Ready to Send</h3>
+               <p className="text-zinc-400 text-lg mb-6">
+                 We've opened your default email app to send the booking request to us!
                </p>
-               <p className="text-zinc-500 text-sm">
-                 We've received your request and will contact you shortly to confirm!
-               </p>
+               
+               <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-sm w-full text-left max-w-lg mb-6 relative group">
+                 <p className="text-zinc-500 text-sm mb-4">If your email didn't open automatically, please send the following information to <strong className="text-gold-500">durhamscrowndetailing@gmail.com</strong>:</p>
+                 <div className="text-zinc-300 text-sm whitespace-pre-wrap font-mono p-4 bg-black rounded-sm border border-zinc-900 overflow-x-auto">
+                   <b>Subject:</b> {submitted.subject}<br/><br/>
+                   {submitted.body}
+                 </div>
+                 
+                 <button
+                   onClick={() => {
+                     navigator.clipboard.writeText(`To: durhamscrowndetailing@gmail.com\nSubject: ${submitted.subject}\n\n${submitted.body}`);
+                     alert("Booking details copied to clipboard!");
+                   }}
+                   className="mt-4 flex items-center gap-2 text-sm text-gold-500 hover:text-gold-400 transition-colors mx-auto font-medium"
+                 >
+                   <Copy className="w-4 h-4" />
+                   Copy Email Content
+                 </button>
+               </div>
+
+               <button 
+                 onClick={() => {
+                    setSubmitted(false);
+                    setSelectedDate(undefined);
+                    setSelectedTime(null);
+                 }}
+                 className="text-zinc-500 text-sm hover:text-white underline decoration-zinc-700 underline-offset-4"
+               >
+                 Start a new booking
+               </button>
             </div>
           ) : (
             <form onSubmit={handleFormSubmit} className="bg-zinc-900 p-8 rounded-sm border border-zinc-800 shadow-xl flex flex-col gap-10">
