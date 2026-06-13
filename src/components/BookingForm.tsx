@@ -284,9 +284,9 @@ export function BookingForm() {
                           name="vehicle-type"
                           className="block w-full border-0 bg-zinc-950 px-3.5 py-3.5 text-white shadow-sm ring-1 ring-inset ring-zinc-800 focus:ring-2 focus:ring-inset focus:ring-gold-500 sm:text-sm sm:leading-6 transition-all"
                         >
-                          <option>Car / Coupe / Sedan</option>
-                          <option>A Mid-Size SUV (+CA$24.99)</option>
                           <option>A Large SUV / Truck / Van (+CA$39.99)</option>
+                          <option>A Compact / Mid-Size SUV (+CA$24.99)</option>
+                          <option>Car / Coupe / Sedan</option>
                         </select>
                       </div>
                     </div>
