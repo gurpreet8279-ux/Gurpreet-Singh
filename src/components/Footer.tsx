@@ -63,6 +63,7 @@ export function Footer() {
              &copy; {new Date().getFullYear()} Durham's Crown Mobile Detailing. All rights reserved.
            </p>
            <div className="flex gap-4">
+              <a href="#admin" className="hover:text-gold-400">Admin</a>
               <a href="#" className="hover:text-gold-400">Privacy Policy</a>
               <a href="#" className="hover:text-gold-400">Terms of Service</a>
            </div>

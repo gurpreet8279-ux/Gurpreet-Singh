@@ -1,16 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CheckCircle2, Calendar as CalendarIcon, Clock, ChevronRight, Copy, Mail } from "lucide-react";
 import { format, startOfToday } from "date-fns";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import { cn } from "../lib/utils";
-import { AVAILABLE_TIME_SLOTS } from "../config";
+import { AVAILABLE_TIME_SLOTS, BLOCKED_DATES } from "../config";
 
 export function BookingForm() {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [dynamicBlockedDates, setDynamicBlockedDates] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Load local blocked dates from Admin Dashboard
+    const saved = localStorage.getItem("DURHAM_BLOCKED_DATES");
+    if (saved) {
+      try {
+        setDynamicBlockedDates(JSON.parse(saved));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    
+    // Polling mechanism to keep forms up to date without refresh if admin open in another tab
+    const interval = setInterval(() => {
+      const updatedSaved = localStorage.getItem("DURHAM_BLOCKED_DATES");
+      if (updatedSaved) {
+        try {
+          const parsed = JSON.parse(updatedSaved);
+          if (JSON.stringify(parsed) !== JSON.stringify(dynamicBlockedDates)) {
+            setDynamicBlockedDates(parsed);
+          }
+        } catch (e) {}
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [dynamicBlockedDates]);
 
   const today = startOfToday();
 
@@ -166,7 +193,11 @@ export function BookingForm() {
                       mode="single"
                       selected={selectedDate}
                       onSelect={(date) => { setSelectedDate(date); setSelectedTime(null); }}
-                      disabled={[{ before: today }]}
+                      disabled={(date) => {
+                        if (date < today) return true;
+                        const dateStr = format(date, 'yyyy-MM-dd');
+                        return BLOCKED_DATES.includes(dateStr) || dynamicBlockedDates.includes(dateStr);
+                      }}
                       showOutsideDays={false}
                     />
                  </div>

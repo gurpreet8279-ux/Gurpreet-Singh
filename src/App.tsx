@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Navigation } from "./components/Navigation";
 import { PromoBanner } from "./components/PromoBanner";
 import { Hero } from "./components/Hero";
@@ -5,8 +6,23 @@ import { About } from "./components/About";
 import { Pricing } from "./components/Pricing";
 import { BookingForm } from "./components/BookingForm";
 import { Footer } from "./components/Footer";
+import { AdminDashboard } from "./components/AdminDashboard";
 
 export default function App() {
+  const [isAdminMode, setIsAdminMode] = useState(false);
+
+  useEffect(() => {
+    // Basic hash routing for admin page
+    const checkHash = () => setIsAdminMode(window.location.hash === "#admin");
+    checkHash(); // Check on mount
+    window.addEventListener("hashchange", checkHash);
+    return () => window.removeEventListener("hashchange", checkHash);
+  }, []);
+
+  if (isAdminMode) {
+    return <AdminDashboard onBack={() => { window.location.hash = ""; }} />;
+  }
+
   return (
     <div className="min-h-screen bg-black overflow-x-hidden selection:bg-gold-500/30">
       <PromoBanner />
