@@ -11,14 +11,21 @@ export function BookingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [dynamicBlockedDates, setDynamicBlockedDates] = useState<string[]>([]);
+  const [dynamicBlockedSlots, setDynamicBlockedSlots] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     // Load local blocked dates from Admin Dashboard
     const saved = localStorage.getItem("DURHAM_BLOCKED_DATES");
     if (saved) {
       try {
-        setDynamicBlockedDates(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+            const temp: Record<string, string[]> = {};
+            parsed.forEach(p => temp[p] = ["ALL"]);
+            setDynamicBlockedSlots(temp);
+        } else {
+            setDynamicBlockedSlots(parsed);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -30,14 +37,17 @@ export function BookingForm() {
       if (updatedSaved) {
         try {
           const parsed = JSON.parse(updatedSaved);
-          if (JSON.stringify(parsed) !== JSON.stringify(dynamicBlockedDates)) {
-            setDynamicBlockedDates(parsed);
+          const checkObj = Array.isArray(parsed) 
+                ? parsed.reduce((acc, val) => ({...acc, [val]: ["ALL"]}), {}) 
+                : parsed;
+          if (JSON.stringify(checkObj) !== JSON.stringify(dynamicBlockedSlots)) {
+            setDynamicBlockedSlots(checkObj);
           }
         } catch (e) {}
       }
     }, 2000);
     return () => clearInterval(interval);
-  }, [dynamicBlockedDates]);
+  }, [dynamicBlockedSlots]);
 
   const today = startOfToday();
 
@@ -94,8 +104,14 @@ export function BookingForm() {
   const isTimeSlotAvailable = (timeStr: string) => {
     if (!selectedDate) return false;
     
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    const blockedSlots = dynamicBlockedSlots[dateStr] || [];
+    if (blockedSlots.includes("ALL") || blockedSlots.includes(timeStr)) {
+      return false;
+    }
+    
     const now = new Date();
-    const isTodayFlag = format(selectedDate, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd');
+    const isTodayFlag = dateStr === format(now, 'yyyy-MM-dd');
     
     if (!isTodayFlag) return true;
 
@@ -196,7 +212,9 @@ export function BookingForm() {
                       disabled={(date) => {
                         if (date < today) return true;
                         const dateStr = format(date, 'yyyy-MM-dd');
-                        return BLOCKED_DATES.includes(dateStr) || dynamicBlockedDates.includes(dateStr);
+                        if (BLOCKED_DATES.includes(dateStr)) return true;
+                        if (dynamicBlockedSlots[dateStr]?.includes("ALL")) return true;
+                        return false;
                       }}
                       showOutsideDays={false}
                     />
