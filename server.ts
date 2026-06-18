@@ -8,18 +8,26 @@ const DATA_FILE = path.join(process.cwd(), "blockedSlots.json");
 // Define the type here so it's clear
 type BlockedSlotsRecord = Record<string, string[]>;
 
+let inMemorySlots: BlockedSlotsRecord | null = null;
+
 async function loadBlockedSlots(): Promise<BlockedSlotsRecord> {
+  if (inMemorySlots) return inMemorySlots;
   try {
     const data = await fs.readFile(DATA_FILE, "utf-8");
-    return JSON.parse(data);
+    inMemorySlots = JSON.parse(data);
+    return inMemorySlots || {};
   } catch (error) {
-    // If file doesn't exist or is invalid, return empty object
     return {};
   }
 }
 
 async function saveBlockedSlots(slots: BlockedSlotsRecord) {
-  await fs.writeFile(DATA_FILE, JSON.stringify(slots, null, 2), "utf-8");
+  inMemorySlots = slots;
+  try {
+    await fs.writeFile(DATA_FILE, JSON.stringify(slots, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Failed to write to file", err);
+  }
 }
 
 async function startServer() {
