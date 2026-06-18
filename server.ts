@@ -3,7 +3,7 @@ import fs from "fs/promises";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 
-const DATA_FILE = path.join(process.cwd(), "blockedSlots.json");
+const DATA_FILE = path.join(process.cwd(), "data", "blocked-slots.json");
 
 // Define the type here so it's clear
 type BlockedSlotsRecord = Record<string, string[]>;
