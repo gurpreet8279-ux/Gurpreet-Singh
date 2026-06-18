@@ -18,7 +18,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   useEffect(() => {
     const fetchSlots = async () => {
       try {
-        const res = await fetch("/api/blocked-slots");
+        const res = await fetch(`/api/blocked-slots?_t=${Date.now()}`);
         const data = await res.json();
         setBlockedSlots(data);
       } catch (e) {

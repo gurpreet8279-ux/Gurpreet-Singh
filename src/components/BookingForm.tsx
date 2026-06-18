@@ -16,7 +16,7 @@ export function BookingForm() {
   useEffect(() => {
     const fetchBlockedSlots = async () => {
       try {
-        const res = await fetch("/api/blocked-slots");
+        const res = await fetch(`/api/blocked-slots?_t=${Date.now()}`);
         const data = await res.json();
         setDynamicBlockedSlots(data);
       } catch (e) {

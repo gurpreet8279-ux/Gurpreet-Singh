@@ -30,6 +30,7 @@ async function startServer() {
 
   // API Routes
   app.get("/api/blocked-slots", async (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
     const slots = await loadBlockedSlots();
     res.json(slots);
   });
