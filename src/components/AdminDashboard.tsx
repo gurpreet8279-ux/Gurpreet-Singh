@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { Lock, Trash2, Plus, Calendar as CalendarIcon, ArrowLeft, Clock } from "lucide-react";
 import { DayPicker } from "react-day-picker";
+import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
 import { AVAILABLE_TIME_SLOTS } from "../config";
 
 export type BlockedSlotsRecord = Record<string, string[]>;
@@ -16,16 +18,19 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const [selectedTime, setSelectedTime] = useState<string>("ALL");
 
   useEffect(() => {
-    const fetchSlots = async () => {
-      try {
-        const res = await fetch(`/api/blocked-slots?_t=${Date.now()}`);
-        const data = await res.json();
-        setBlockedSlots(data);
-      } catch (e) {
-        console.error("Could not load blocked slots", e);
+    // Listen to Firebase directly
+    const docRef = doc(db, 'settings', 'blockedSlots');
+    const unsubscribe = onSnapshot(docRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setBlockedSlots(snapshot.data()?.slots || {});
+      } else {
+        setBlockedSlots({});
       }
-    };
-    fetchSlots();
+    }, (error) => {
+      console.error("Firebase slots fetch error", error);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -39,13 +44,11 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   };
 
   const saveBlockedSlots = async (slots: BlockedSlotsRecord) => {
+    // Optimistic UI update
     setBlockedSlots(slots);
     try {
-      await fetch("/api/blocked-slots", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(slots)
-      });
+      const docRef = doc(db, 'settings', 'blockedSlots');
+      await setDoc(docRef, { slots }, { merge: true });
     } catch (e) {
       console.error("Failed to save blocked slots", e);
     }

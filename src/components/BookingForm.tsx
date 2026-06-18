@@ -3,6 +3,8 @@ import { CheckCircle2, Calendar as CalendarIcon, Clock, ChevronRight, Copy, Mail
 import { format, startOfToday } from "date-fns";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
 import { cn } from "../lib/utils";
 import { AVAILABLE_TIME_SLOTS, BLOCKED_DATES } from "../config";
 
@@ -14,25 +16,19 @@ export function BookingForm() {
   const [dynamicBlockedSlots, setDynamicBlockedSlots] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
-    const fetchBlockedSlots = async () => {
-      try {
-        const res = await fetch(`/api/blocked-slots?_t=${Date.now()}`);
-        const data = await res.json();
-        setDynamicBlockedSlots(data);
-      } catch (e) {
-        console.error("Failed to fetch blocked slots", e);
+    // Listen to Firebase directly
+    const docRef = doc(db, 'settings', 'blockedSlots');
+    const unsubscribe = onSnapshot(docRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setDynamicBlockedSlots(snapshot.data()?.slots || {});
+      } else {
+        setDynamicBlockedSlots({});
       }
-    };
+    }, (error) => {
+      console.error("Firebase slots fetch error", error);
+    });
     
-    // Initial fetch
-    fetchBlockedSlots();
-    
-    // Polling mechanism to keep forms up to date without refresh
-    const interval = setInterval(() => {
-      fetchBlockedSlots();
-    }, 5000); // Polling every 5 seconds
-    
-    return () => clearInterval(interval);
+    return () => unsubscribe();
   }, []);
 
   const today = startOfToday();

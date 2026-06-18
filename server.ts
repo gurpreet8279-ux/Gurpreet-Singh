@@ -1,34 +1,6 @@
 import express from "express";
-import fs from "fs/promises";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-
-const DATA_FILE = path.join(process.cwd(), "data", "blocked-slots.json");
-
-// Define the type here so it's clear
-type BlockedSlotsRecord = Record<string, string[]>;
-
-let inMemorySlots: BlockedSlotsRecord | null = null;
-
-async function loadBlockedSlots(): Promise<BlockedSlotsRecord> {
-  if (inMemorySlots) return inMemorySlots;
-  try {
-    const data = await fs.readFile(DATA_FILE, "utf-8");
-    inMemorySlots = JSON.parse(data);
-    return inMemorySlots || {};
-  } catch (error) {
-    return {};
-  }
-}
-
-async function saveBlockedSlots(slots: BlockedSlotsRecord) {
-  inMemorySlots = slots;
-  try {
-    await fs.writeFile(DATA_FILE, JSON.stringify(slots, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Failed to write to file", err);
-  }
-}
 
 async function startServer() {
   const app = express();
@@ -37,16 +9,8 @@ async function startServer() {
   app.use(express.json());
 
   // API Routes
-  app.get("/api/blocked-slots", async (req, res) => {
-    res.setHeader('Cache-Control', 'no-store');
-    const slots = await loadBlockedSlots();
-    res.json(slots);
-  });
-
-  app.post("/api/blocked-slots", async (req, res) => {
-    const newSlots = req.body;
-    await saveBlockedSlots(newSlots);
-    res.json({ success: true, blockedSlots: newSlots });
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok" });
   });
 
   // Vite middleware for development
