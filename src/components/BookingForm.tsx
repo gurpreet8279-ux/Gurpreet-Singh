@@ -14,40 +14,26 @@ export function BookingForm() {
   const [dynamicBlockedSlots, setDynamicBlockedSlots] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
-    // Load local blocked dates from Admin Dashboard
-    const saved = localStorage.getItem("DURHAM_BLOCKED_DATES");
-    if (saved) {
+    const fetchBlockedSlots = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-            const temp: Record<string, string[]> = {};
-            parsed.forEach(p => temp[p] = ["ALL"]);
-            setDynamicBlockedSlots(temp);
-        } else {
-            setDynamicBlockedSlots(parsed);
-        }
+        const res = await fetch("/api/blocked-slots");
+        const data = await res.json();
+        setDynamicBlockedSlots(data);
       } catch (e) {
-        console.error(e);
+        console.error("Failed to fetch blocked slots", e);
       }
-    }
+    };
     
-    // Polling mechanism to keep forms up to date without refresh if admin open in another tab
+    // Initial fetch
+    fetchBlockedSlots();
+    
+    // Polling mechanism to keep forms up to date without refresh
     const interval = setInterval(() => {
-      const updatedSaved = localStorage.getItem("DURHAM_BLOCKED_DATES");
-      if (updatedSaved) {
-        try {
-          const parsed = JSON.parse(updatedSaved);
-          const checkObj = Array.isArray(parsed) 
-                ? parsed.reduce((acc, val) => ({...acc, [val]: ["ALL"]}), {}) 
-                : parsed;
-          if (JSON.stringify(checkObj) !== JSON.stringify(dynamicBlockedSlots)) {
-            setDynamicBlockedSlots(checkObj);
-          }
-        } catch (e) {}
-      }
-    }, 2000);
+      fetchBlockedSlots();
+    }, 5000); // Polling every 5 seconds
+    
     return () => clearInterval(interval);
-  }, [dynamicBlockedSlots]);
+  }, []);
 
   const today = startOfToday();
 

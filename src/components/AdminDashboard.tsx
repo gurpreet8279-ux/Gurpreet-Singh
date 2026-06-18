@@ -16,25 +16,16 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const [selectedTime, setSelectedTime] = useState<string>("ALL");
 
   useEffect(() => {
-    const saved = localStorage.getItem("DURHAM_BLOCKED_DATES");
-    if (saved) {
+    const fetchSlots = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          // Migrate old array format to new record format
-          const migrated: BlockedSlotsRecord = {};
-          parsed.forEach(date => {
-            migrated[date] = ["ALL"];
-          });
-          setBlockedSlots(migrated);
-          localStorage.setItem("DURHAM_BLOCKED_DATES", JSON.stringify(migrated));
-        } else {
-          setBlockedSlots(parsed);
-        }
+        const res = await fetch("/api/blocked-slots");
+        const data = await res.json();
+        setBlockedSlots(data);
       } catch (e) {
-        console.error("Could not parse blocked dates", e);
+        console.error("Could not load blocked slots", e);
       }
-    }
+    };
+    fetchSlots();
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -47,9 +38,17 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
     }
   };
 
-  const saveBlockedSlots = (slots: BlockedSlotsRecord) => {
+  const saveBlockedSlots = async (slots: BlockedSlotsRecord) => {
     setBlockedSlots(slots);
-    localStorage.setItem("DURHAM_BLOCKED_DATES", JSON.stringify(slots));
+    try {
+      await fetch("/api/blocked-slots", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(slots)
+      });
+    } catch (e) {
+      console.error("Failed to save blocked slots", e);
+    }
   };
 
   const handleBlockSlot = () => {
@@ -263,7 +262,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
             
             <div className="mt-8 bg-gold-500/5 border border-gold-500/20 rounded-lg p-4">
               <p className="text-sm text-gold-400">
-                <strong>Note:</strong> These blocked slots are saved locally in this browser.
+                <strong>Note:</strong> Blocked slots are distributed via the live server and stored persistently.
               </p>
             </div>
           </div>
