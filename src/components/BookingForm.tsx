@@ -99,6 +99,16 @@ export function BookingForm() {
     };
 
     try {
+      // Save to Firestore first directly from client
+      const { collection, addDoc } = await import("firebase/firestore");
+      const { db } = await import("../db/firebase");
+      
+      const docRef = await addDoc(collection(db, "bookings"), {
+        ...apiPayload,
+        createdAt: new Date().toISOString()
+      });
+      console.log("Saved to firestore:", docRef.id);
+
       const response = await fetch("/api/bookings", {
           method: "POST",
           headers: {

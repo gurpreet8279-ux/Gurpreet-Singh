@@ -36,29 +36,25 @@ async function startServer() {
 
   // Example: Insert this logic into your existing booking controller
   app.post("/api/bookings", async (req, res) => {
+    console.log("Received booking request:", req.body);
     const bookingData: BookingDetails = req.body;
     
     try {
-      // 1. Check double-bookings via Calendar (or your database)
-      const isAvailable = await isTimeSlotAvailable(bookingData.startTime, bookingData.endTime);
-      
-      if (!isAvailable) {
-        return res.status(409).json({ error: "Time slot is already booked." });
+      // 1. Check double-bookings via Calendar (if set up)
+      try {
+        console.log("Checking time slot availability...");
+        const isAvailable = await isTimeSlotAvailable(bookingData.startTime, bookingData.endTime);
+        console.log("Time slot availability:", isAvailable);
+        if (!isAvailable) {
+          return res.status(409).json({ error: "Time slot is already booked." });
+        }
+      } catch (calError) {
+        console.error("Calendar check failed (likely not configured). Proceeding with booking anyway.", calError);
       }
-
-      // 2. Save booking to your existing database FIRST
-      const { collection, addDoc } = await import("firebase/firestore");
-      const { db } = await import("./src/db/firebase");
-      
-      const docRef = await addDoc(collection(db, "bookings"), {
-        ...bookingData,
-        createdAt: new Date().toISOString()
-      });
-      
-      console.log("Booking saved to database with ID:", docRef.id);
 
       // Submit to Web3Forms to trigger the email notification
       try {
+        console.log("Submitting to Web3Forms...");
         const web3formsAccessKey = process.env.VITE_WEB3FORMS_ACCESS_KEY || "fea02e2e-c9c0-463e-a4f1-8cb7a88fe74e";
         const emailData = {
           access_key: web3formsAccessKey,
