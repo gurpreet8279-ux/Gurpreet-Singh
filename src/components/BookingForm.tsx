@@ -135,30 +135,21 @@ export function BookingForm() {
           console.error("Web3Forms client failed:", err);
       }
 
-      // 2. Submit to our backend for Calendar Sync
-      const response = await fetch("/api/bookings", {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-          },
-          body: JSON.stringify(apiPayload)
-      });
-      
-      const resText = await response.text();
-      let result;
+      // 2. Submit to our backend for Calendar Sync (optional)
       try {
-          result = JSON.parse(resText);
-      } catch (e) {
-          console.error("Failed to parse backend response:", resText);
-          throw new Error(`Server returned invalid response: ${resText.substring(0, 50)}...`);
+          const response = await fetch("/api/bookings", {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json",
+              },
+              body: JSON.stringify(apiPayload)
+          });
+          console.log("Backend status:", response.status);
+      } catch (err) {
+          console.warn("Backend sync failed. Continuing since Web3Forms handles emails.");
       }
 
-      if (response.ok) {
-          setSubmitted(true);
-      } else {
-          console.error(result);
-          alert(`Submission failed: ${result.error || 'Please try again.'}`);
-      }
+      setSubmitted(true);
     } catch (error: any) {
         console.error(error);
         alert(`Something went wrong! Error: ${error.message}`);
