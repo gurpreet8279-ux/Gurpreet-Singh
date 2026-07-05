@@ -124,8 +124,13 @@ export function BookingForm() {
               },
               body: JSON.stringify(emailData)
           });
-          const w3fResult = await w3fResponse.json();
-          console.log("Web3Forms client result:", w3fResult);
+          const text = await w3fResponse.text();
+          try {
+              const w3fResult = JSON.parse(text);
+              console.log("Web3Forms client result:", w3fResult);
+          } catch (e) {
+              console.warn("Web3Forms returned non-JSON:", text);
+          }
       } catch (err) {
           console.error("Web3Forms client failed:", err);
       }
@@ -139,7 +144,15 @@ export function BookingForm() {
           body: JSON.stringify(apiPayload)
       });
       
-      const result = await response.json();
+      const resText = await response.text();
+      let result;
+      try {
+          result = JSON.parse(resText);
+      } catch (e) {
+          console.error("Failed to parse backend response:", resText);
+          throw new Error(`Server returned invalid response: ${resText.substring(0, 50)}...`);
+      }
+
       if (response.ok) {
           setSubmitted(true);
       } else {
