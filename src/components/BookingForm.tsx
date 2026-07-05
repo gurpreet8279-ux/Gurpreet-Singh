@@ -99,6 +99,38 @@ export function BookingForm() {
     };
 
     try {
+      // 1. Submit to Web3Forms directly from the browser (to avoid server-side IP block)
+      const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || "fea02e2e-c9c0-463e-a4f1-8cb7a88fe74e";
+      const emailData = {
+        access_key: accessKey,
+        subject: `New Booking Request from ${apiPayload.name}`,
+        from_name: "Durham's Crown Mobile Detailing Bookings",
+        name: apiPayload.name,
+        email: apiPayload.email || "",
+        phone: apiPayload.phone,
+        package: apiPayload.serviceType,
+        vehicle: apiPayload.vehicleDetails,
+        address: apiPayload.address,
+        Service_Date: apiPayload.displayDate,
+        Service_Time: apiPayload.displayTime
+      };
+
+      try {
+          const w3fResponse = await fetch("https://api.web3forms.com/submit", {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json"
+              },
+              body: JSON.stringify(emailData)
+          });
+          const w3fResult = await w3fResponse.json();
+          console.log("Web3Forms client result:", w3fResult);
+      } catch (err) {
+          console.error("Web3Forms client failed:", err);
+      }
+
+      // 2. Submit to our backend for Calendar Sync
       const response = await fetch("/api/bookings", {
           method: "POST",
           headers: {
@@ -114,9 +146,9 @@ export function BookingForm() {
           console.error(result);
           alert(`Submission failed: ${result.error || 'Please try again.'}`);
       }
-    } catch (error) {
+    } catch (error: any) {
         console.error(error);
-        alert("Something went wrong! Please check your connection and try again.");
+        alert(`Something went wrong! Error: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }

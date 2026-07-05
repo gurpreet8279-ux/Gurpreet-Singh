@@ -52,39 +52,6 @@ async function startServer() {
         console.error("Calendar check failed (likely not configured). Proceeding with booking anyway.", calError);
       }
 
-      // Submit to Web3Forms to trigger the email notification
-      try {
-        console.log("Submitting to Web3Forms...");
-        const web3formsAccessKey = process.env.VITE_WEB3FORMS_ACCESS_KEY || "fea02e2e-c9c0-463e-a4f1-8cb7a88fe74e";
-        const emailData = {
-          access_key: web3formsAccessKey,
-          subject: `New Booking Request from ${bookingData.name}`,
-          from_name: "Durham's Crown Mobile Detailing Bookings",
-          name: bookingData.name,
-          email: req.body.email || "", // we need to pass email in the request
-          phone: bookingData.phone,
-          package: bookingData.serviceType,
-          vehicle: bookingData.vehicleDetails,
-          address: bookingData.address,
-          Service_Date: req.body.displayDate,
-          Service_Time: req.body.displayTime
-        };
-
-        const w3fResponse = await fetch("https://api.web3forms.com/submit", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json"
-          },
-          body: JSON.stringify(emailData)
-        });
-        
-        const w3fResult = await w3fResponse.json();
-        console.log("Web3Forms result:", w3fResult);
-      } catch (emailErr) {
-        console.error("Failed to send Web3Forms email:", emailErr);
-      }
-
       // 3. Sync to Google Calendar
       try {
         await createBookingEvent(bookingData);
