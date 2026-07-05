@@ -85,3 +85,25 @@ export async function createBookingEvent(bookingDetails: BookingDetails) {
     throw new Error("Failed to sync booking to Google Calendar.");
   }
 }
+
+export async function getEventsForDay(dateStr: string) {
+  // dateStr is 'YYYY-MM-DD'
+  // Create boundaries for the day
+  const startTime = new Date(`${dateStr}T00:00:00.000Z`); 
+  startTime.setHours(startTime.getHours() - 12); 
+  const endTime = new Date(`${dateStr}T23:59:59.999Z`);
+  endTime.setHours(endTime.getHours() + 12);
+
+  try {
+    const response = await calendar.events.list({
+      calendarId: CALENDAR_ID,
+      timeMin: startTime.toISOString(),
+      timeMax: endTime.toISOString(),
+      singleEvents: true,
+    });
+    return response.data.items || [];
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    return [];
+  }
+}

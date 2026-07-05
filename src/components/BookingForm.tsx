@@ -14,6 +14,7 @@ export function BookingForm() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [dynamicBlockedSlots, setDynamicBlockedSlots] = useState<Record<string, string[]>>({});
+  const [googleEvents, setGoogleEvents] = useState<{start: string, end: string}[]>([]);
 
   useEffect(() => {
     // Listen to Firebase directly
@@ -30,6 +31,22 @@ export function BookingForm() {
     
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!selectedDate) {
+      setGoogleEvents([]);
+      return;
+    }
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    fetch(`/api/slots?date=${dateStr}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.events) {
+          setGoogleEvents(data.events);
+        }
+      })
+      .catch(err => console.error("Error fetching Google Calendar slots", err));
+  }, [selectedDate]);
 
   const today = startOfToday();
 
@@ -57,23 +74,45 @@ export function BookingForm() {
     formData.append("Service_Time", selectedTime);
 
     const object = Object.fromEntries(formData);
-    const json = JSON.stringify(object);
+    
+    // Parse time block to pass valid ISO start/end to backend
+    const [startHour, startMinuteStr, ampm] = selectedTime.split(/[:\s]/);
+    let hour = parseInt(startHour);
+    if (ampm === "PM" && hour < 12) hour += 12;
+    if (ampm === "AM" && hour === 12) hour = 0;
+    
+    const startDateTime = new Date(selectedDate);
+    startDateTime.setHours(hour, parseInt(startMinuteStr), 0);
+    const endDateTime = new Date(startDateTime.getTime() + 2 * 60 * 60 * 1000); // 2-hour duration
+    
+    const apiPayload = {
+      name: object.name,
+      email: object.email,
+      phone: object.phone,
+      serviceType: object.package,
+      vehicleDetails: `${object['vehicle-make']} - ${object['vehicle-type']}`,
+      address: object.address,
+      startTime: startDateTime.toISOString(),
+      endTime: endDateTime.toISOString(),
+      displayDate: object.Service_Date,
+      displayTime: object.Service_Time
+    };
 
     try {
-      const response = await fetch("https://api.web3forms.com/submit", {
+      const response = await fetch("/api/bookings", {
           method: "POST",
           headers: {
               "Content-Type": "application/json",
-              Accept: "application/json"
           },
-          body: json
+          body: JSON.stringify(apiPayload)
       });
+      
       const result = await response.json();
-      if (result.success) {
+      if (response.ok) {
           setSubmitted(true);
       } else {
           console.error(result);
-          alert(`Submission failed: ${result.message || 'Please try again.'}`);
+          alert(`Submission failed: ${result.error || 'Please try again.'}`);
       }
     } catch (error) {
         console.error(error);
@@ -112,8 +151,21 @@ export function BookingForm() {
     slotDate.setHours(hours, minutes, 0, 0);
 
     const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+    if (slotDate <= oneHourFromNow) return false;
 
-    return slotDate > oneHourFromNow;
+    // Google Calendar check (assuming 2 hour duration for the slot)
+    const slotEnd = new Date(slotDate.getTime() + 2 * 60 * 60 * 1000);
+    for (const event of googleEvents) {
+      if (!event.start || !event.end) continue;
+      const eventStart = new Date(event.start);
+      const eventEnd = new Date(event.end);
+      // Overlap logic: slotStart < eventEnd && slotEnd > eventStart
+      if (slotDate < eventEnd && slotEnd > eventStart) {
+        return false;
+      }
+    }
+
+    return true;
   };
 
   return (

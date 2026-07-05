@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { isTimeSlotAvailable, createBookingEvent, BookingDetails } from "./src/utils/googleCalendar";
+import { isTimeSlotAvailable, createBookingEvent, getEventsForDay, BookingDetails } from "./src/utils/googleCalendar";
 
 async function startServer() {
   const app = express();
@@ -12,6 +12,26 @@ async function startServer() {
   // API Routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  app.get("/api/slots", async (req, res) => {
+    const { date } = req.query;
+    if (!date || typeof date !== "string") {
+      return res.status(400).json({ error: "Date is required (YYYY-MM-DD)" });
+    }
+    
+    try {
+      const events = await getEventsForDay(date);
+      // Return a minimal format for frontend
+      const mappedEvents = events.map(e => ({
+        start: e.start?.dateTime || e.start?.date,
+        end: e.end?.dateTime || e.end?.date,
+      }));
+      res.json({ events: mappedEvents });
+    } catch (error) {
+      console.error("Error fetching slots:", error);
+      res.status(500).json({ error: "Failed to fetch slots" });
+    }
   });
 
   // Example: Insert this logic into your existing booking controller
@@ -36,6 +56,38 @@ async function startServer() {
       });
       
       console.log("Booking saved to database with ID:", docRef.id);
+
+      // Submit to Web3Forms to trigger the email notification
+      try {
+        const web3formsAccessKey = process.env.VITE_WEB3FORMS_ACCESS_KEY || "fea02e2e-c9c0-463e-a4f1-8cb7a88fe74e";
+        const emailData = {
+          access_key: web3formsAccessKey,
+          subject: `New Booking Request from ${bookingData.name}`,
+          from_name: "Durham's Crown Mobile Detailing Bookings",
+          name: bookingData.name,
+          email: req.body.email || "", // we need to pass email in the request
+          phone: bookingData.phone,
+          package: bookingData.serviceType,
+          vehicle: bookingData.vehicleDetails,
+          address: bookingData.address,
+          Service_Date: req.body.displayDate,
+          Service_Time: req.body.displayTime
+        };
+
+        const w3fResponse = await fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json"
+          },
+          body: JSON.stringify(emailData)
+        });
+        
+        const w3fResult = await w3fResponse.json();
+        console.log("Web3Forms result:", w3fResult);
+      } catch (emailErr) {
+        console.error("Failed to send Web3Forms email:", emailErr);
+      }
 
       // 3. Sync to Google Calendar
       try {
