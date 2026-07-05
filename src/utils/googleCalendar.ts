@@ -23,6 +23,7 @@ const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || 'durhamscrowndetailing@gma
 
 export interface BookingDetails {
   name: string;
+  email?: string;
   phone: string;
   serviceType: string;
   vehicleDetails: string;
@@ -60,9 +61,9 @@ export async function isTimeSlotAvailable(startTime: string, endTime: string): P
  * @param bookingDetails The customer and service details
  */
 export async function createBookingEvent(bookingDetails: BookingDetails) {
-  const { name, phone, serviceType, vehicleDetails, address, startTime, endTime } = bookingDetails;
+  const { name, email, phone, serviceType, vehicleDetails, address, startTime, endTime } = bookingDetails;
   
-  const event = {
+  const event: any = {
     summary: `${serviceType} - ${name}`,
     location: address,
     description: `Customer: ${name}\nPhone: ${phone}\nVehicle: ${vehicleDetails}\nService: ${serviceType}`,
@@ -74,9 +75,14 @@ export async function createBookingEvent(bookingDetails: BookingDetails) {
     },
   };
 
+  if (email) {
+    event.attendees = [{ email }];
+  }
+
   try {
     const response = await calendar.events.insert({
       calendarId: CALENDAR_ID,
+      sendUpdates: 'all', // This tells Google to send the email notification
       requestBody: event,
     });
     return response.data;
