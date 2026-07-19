@@ -3,8 +3,6 @@ import { CheckCircle2, Calendar as CalendarIcon, Clock, ChevronRight, Copy, Mail
 import { format, startOfToday } from "date-fns";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
-import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "../firebase";
 import { cn } from "../lib/utils";
 import { AVAILABLE_TIME_SLOTS, BLOCKED_DATES } from "../config";
 
@@ -12,13 +10,7 @@ const getApiUrl = (endpoint: string) => {
   if (import.meta.env.VITE_API_URL) {
     return `${import.meta.env.VITE_API_URL}${endpoint}`;
   }
-  const host = window.location.hostname;
-  if (host === "localhost" || host === "127.0.0.1" || host.endsWith("run.app")) {
-    return endpoint;
-  }
-  // Automatically route custom domains to the live production Cloud Run API container
-  const base = "https://ais-pre-7dx3czfaefni3zdxkayidk-308212599119.us-west2.run.app";
-  return `${base}${endpoint}`;
+  return endpoint;
 };
 
 export function BookingForm() {
@@ -26,23 +18,33 @@ export function BookingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [dynamicBlockedSlots, setDynamicBlockedSlots] = useState<Record<string, string[]>>({});
+  const [dynamicBlockedSlots, setDynamicBlockedSlots] = useState<Record<string, string[]>>(() => {
+    try {
+      const saved = localStorage.getItem("blockedSlots");
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
   const [googleEvents, setGoogleEvents] = useState<{start: string, end: string}[]>([]);
 
   useEffect(() => {
-    // Listen to Firebase directly
-    const docRef = doc(db, 'settings', 'blockedSlots');
-    const unsubscribe = onSnapshot(docRef, (snapshot) => {
-      if (snapshot.exists()) {
-        setDynamicBlockedSlots(snapshot.data()?.slots || {});
-      } else {
-        setDynamicBlockedSlots({});
+    // 1. Initial fetch from server-side API (highly reliable)
+    const fetchLocalSlots = async () => {
+      try {
+        const response = await fetch(getApiUrl("/api/blocked-slots"));
+        if (response.ok) {
+          const data = await response.json();
+          if (data.slots) {
+            setDynamicBlockedSlots(data.slots);
+            localStorage.setItem("blockedSlots", JSON.stringify(data.slots));
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load blocked slots from server-side API:", e);
       }
-    }, (error) => {
-      console.error("Firebase slots fetch error", error);
-    });
-    
-    return () => unsubscribe();
+    };
+    fetchLocalSlots();
   }, []);
 
   useEffect(() => {

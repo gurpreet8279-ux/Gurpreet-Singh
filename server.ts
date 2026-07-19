@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { isTimeSlotAvailable, createBookingEvent, getEventsForDay, BookingDetails } from "./src/utils/googleCalendar";
 
@@ -20,9 +21,47 @@ async function startServer() {
     next();
   });
 
+  const BLOCKED_SLOTS_FILE = path.join(process.cwd(), "blockedSlots.json");
+
+  // Helper to read blocked slots
+  function readBlockedSlotsFromFile(): Record<string, string[]> {
+    try {
+      if (fs.existsSync(BLOCKED_SLOTS_FILE)) {
+        const data = fs.readFileSync(BLOCKED_SLOTS_FILE, "utf8");
+        return JSON.parse(data) || {};
+      }
+    } catch (error) {
+      console.error("Error reading blocked slots file:", error);
+    }
+    return {};
+  }
+
+  // Helper to write blocked slots
+  function writeBlockedSlotsToFile(slots: Record<string, string[]>) {
+    try {
+      fs.writeFileSync(BLOCKED_SLOTS_FILE, JSON.stringify(slots, null, 2), "utf8");
+    } catch (error) {
+      console.error("Error writing blocked slots file:", error);
+    }
+  }
+
   // API Routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  app.get("/api/blocked-slots", (req, res) => {
+    const slots = readBlockedSlotsFromFile();
+    res.json({ slots });
+  });
+
+  app.post("/api/blocked-slots", (req, res) => {
+    const { slots } = req.body;
+    if (!slots || typeof slots !== "object") {
+      return res.status(400).json({ error: "Invalid slots object" });
+    }
+    writeBlockedSlotsToFile(slots);
+    res.json({ success: true, slots });
   });
 
   app.get("/api/slots", async (req, res) => {

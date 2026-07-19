@@ -3,9 +3,14 @@ import { format, parseISO } from "date-fns";
 import { Lock, Trash2, Plus, Calendar as CalendarIcon, ArrowLeft, Clock } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
-import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
-import { db } from "../firebase";
 import { AVAILABLE_TIME_SLOTS } from "../config";
+
+const getApiUrl = (endpoint: string) => {
+  if (import.meta.env.VITE_API_URL) {
+    return `${import.meta.env.VITE_API_URL}${endpoint}`;
+  }
+  return endpoint;
+};
 
 export type BlockedSlotsRecord = Record<string, string[]>;
 
@@ -14,25 +19,36 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   
-  const [blockedSlots, setBlockedSlots] = useState<BlockedSlotsRecord>({});
+  // Load initial slots from localStorage for instant, zero-latency rendering
+  const [blockedSlots, setBlockedSlots] = useState<BlockedSlotsRecord>(() => {
+    try {
+      const saved = localStorage.getItem("blockedSlots");
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("ALL");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   useEffect(() => {
-    // Listen to Firebase directly
-    const docRef = doc(db, 'settings', 'blockedSlots');
-    const unsubscribe = onSnapshot(docRef, (snapshot) => {
-      if (snapshot.exists()) {
-        setBlockedSlots(snapshot.data()?.slots || {});
-      } else {
-        setBlockedSlots({});
+    // 1. Load from server-side JSON API
+    const fetchLocalSlots = async () => {
+      try {
+        const response = await fetch(getApiUrl("/api/blocked-slots"));
+        if (response.ok) {
+          const data = await response.json();
+          if (data.slots) {
+            setBlockedSlots(data.slots);
+            localStorage.setItem("blockedSlots", JSON.stringify(data.slots));
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load blocked slots from server-side API:", e);
       }
-    }, (error) => {
-      console.error("Firebase slots fetch error", error);
-    });
-
-    return () => unsubscribe();
+    };
+    fetchLocalSlots();
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -48,15 +64,30 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const saveBlockedSlots = async (slots: BlockedSlotsRecord) => {
     setSaveStatus("saving");
     setBlockedSlots(slots);
+    
+    // Optimistically save to localStorage for instant client-side persistence
     try {
-      const docRef = doc(db, 'settings', 'blockedSlots');
-      await setDoc(docRef, { slots }, { merge: true });
-      setSaveStatus("saved");
-      setTimeout(() => setSaveStatus("idle"), 3000);
-    } catch (e: any) {
-      console.error("Failed to save blocked slots", e);
+      localStorage.setItem("blockedSlots", JSON.stringify(slots));
+    } catch (e) {
+      console.warn("Failed to write to localStorage:", e);
+    }
+
+    // Save to server-side JSON API (highly reliable, persists across refreshes)
+    try {
+      const response = await fetch(getApiUrl("/api/blocked-slots"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slots }),
+      });
+      if (response.ok) {
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus("idle"), 3000);
+      } else {
+        throw new Error("Server returned non-ok response");
+      }
+    } catch (e) {
+      console.error("Failed to save blocked slots to server-side API:", e);
       setSaveStatus("error");
-      alert("Failed to save to cloud. Error: " + e.message);
     }
   };
 
