@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { Lock, Trash2, Plus, Calendar as CalendarIcon, ArrowLeft, Clock } from "lucide-react";
 import { DayPicker } from "react-day-picker";
+import "react-day-picker/style.css";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { AVAILABLE_TIME_SLOTS } from "../config";
@@ -16,6 +17,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const [blockedSlots, setBlockedSlots] = useState<BlockedSlotsRecord>({});
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("ALL");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   useEffect(() => {
     // Listen to Firebase directly
@@ -44,13 +46,17 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   };
 
   const saveBlockedSlots = async (slots: BlockedSlotsRecord) => {
-    // Optimistic UI update
+    setSaveStatus("saving");
     setBlockedSlots(slots);
     try {
       const docRef = doc(db, 'settings', 'blockedSlots');
       await setDoc(docRef, { slots }, { merge: true });
-    } catch (e) {
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 3000);
+    } catch (e: any) {
       console.error("Failed to save blocked slots", e);
+      setSaveStatus("error");
+      alert("Failed to save to cloud. Error: " + e.message);
     }
   };
 
@@ -148,8 +154,28 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-8 pb-6 border-b border-zinc-800">
           <div>
-            <h1 className="text-3xl font-heading font-bold text-white mb-2">Admin Dashboard</h1>
-            <p className="text-zinc-400 text-sm">Manage your schedule and blocked time slots</p>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-heading font-bold text-white">Admin Dashboard</h1>
+              {saveStatus === "saving" && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+                  Saving...
+                </span>
+              )}
+              {saveStatus === "saved" && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/15 text-green-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  Saved to Cloud
+                </span>
+              )}
+              {saveStatus === "error" && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/15 text-red-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                  Error Saving
+                </span>
+              )}
+            </div>
+            <p className="text-zinc-400 text-sm mt-1">Manage your schedule and blocked time slots</p>
           </div>
           <button 
             onClick={onBack}
@@ -168,14 +194,51 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
               Select Date to Block
             </h2>
             
-            <div className="bg-black border border-zinc-800 rounded-md p-4 mb-6 flex justify-center">
+            <div className="bg-black border border-zinc-800 rounded-md p-4 mb-6 flex justify-center custom-calendar-wrapper">
+              <style>
+                {`
+                  .custom-calendar-wrapper .rdp {
+                    --rdp-accent-color: #D4AF37;
+                    --rdp-background-color: rgba(212, 175, 55, 0.1);
+                    --rdp-day_button: 40px;
+                    --rdp-selected-border: 2px solid var(--rdp-accent-color);
+                    --rdp-outline: 2px solid var(--rdp-accent-color);
+                    margin: 0;
+                  }
+                  .custom-calendar-wrapper .rdp-day_selected, 
+                  .custom-calendar-wrapper .rdp-day_selected:focus-visible, 
+                  .custom-calendar-wrapper .rdp-day_selected:hover {
+                    color: black !important;
+                    background-color: var(--rdp-accent-color) !important;
+                  }
+                  .custom-calendar-wrapper .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+                     background-color: var(--rdp-background-color);
+                  }
+                  .custom-calendar-wrapper .rdp-day_disabled {
+                     opacity: 0.3;
+                  }
+                  .custom-calendar-wrapper .fully-blocked-day {
+                     color: #ef4444 !important;
+                     text-decoration: line-through !important;
+                     font-weight: bold !important;
+                  }
+                `}
+              </style>
               <DayPicker
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
-                disabled={[{ before: new Date() }]}
-                modifiers={{ fullyBlocked: Object.keys(blockedSlots).filter(d => blockedSlots[d].includes("ALL")).map(d => parseISO(d)) }}
-                modifiersClassNames={{ fullyBlocked: "font-bold text-red-500 line-through" }}
+                disabled={(date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  return date < today;
+                }}
+                modifiers={{
+                  fullyBlocked: Object.keys(blockedSlots).filter(d => blockedSlots[d].includes("ALL")).map(d => parseISO(d))
+                }}
+                modifiersClassNames={{
+                  fullyBlocked: "fully-blocked-day"
+                }}
                 className="text-white"
               />
             </div>
