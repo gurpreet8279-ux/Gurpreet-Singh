@@ -211,12 +211,15 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
                     margin: 0;
                   }
                   .custom-calendar-wrapper .rdp-day_selected, 
+                  .custom-calendar-wrapper .rdp-selected,
                   .custom-calendar-wrapper .rdp-day_selected:focus-visible, 
-                  .custom-calendar-wrapper .rdp-day_selected:hover {
-                    color: black;
-                    background-color: var(--rdp-accent-color);
+                  .custom-calendar-wrapper .rdp-selected:focus-visible,
+                  .custom-calendar-wrapper .rdp-day_selected:hover,
+                  .custom-calendar-wrapper .rdp-selected:hover {
+                    color: black !important;
+                    background-color: var(--rdp-accent-color) !important;
                   }
-                  .custom-calendar-wrapper .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+                  .custom-calendar-wrapper .rdp-button:hover:not([disabled]):not(.rdp-day_selected):not(.rdp-selected) {
                      background-color: var(--rdp-background-color);
                   }
                   .custom-calendar-wrapper .rdp-day_disabled {

@@ -25,10 +25,10 @@ async function getFirestoreDb() {
     const firebaseConfig = JSON.parse(configData);
     
     // Dynamic import to prevent crashes if Firestore is uninitialized or key is missing
-    const { initializeApp } = await import("firebase/app");
+    const { initializeApp, getApps, getApp } = await import("firebase/app");
     const { getFirestore } = await import("firebase/firestore");
     
-    const app = initializeApp(firebaseConfig);
+    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     dbInstance = getFirestore(app, firebaseConfig.firestoreDatabaseId);
     return dbInstance;
   } catch (error) {
@@ -38,9 +38,7 @@ async function getFirestoreDb() {
 }
 
 async function loadBlockedSlots(): Promise<BlockedSlotsRecord> {
-  if (inMemorySlots) return inMemorySlots;
-
-  // Try loading from Firestore
+  // Always try loading from Firestore first for real-time synchronization
   const firestoreDb = await getFirestoreDb();
   if (firestoreDb) {
     try {
@@ -55,6 +53,9 @@ async function loadBlockedSlots(): Promise<BlockedSlotsRecord> {
       console.error("Failed to load blocked slots from Firestore, falling back:", error);
     }
   }
+
+  // Fallback to in-memory cache if set
+  if (inMemorySlots) return inMemorySlots;
 
   // Fallback to local JSON file
   try {
