@@ -8,6 +8,11 @@ service cloud.firestore {
       allow read, update, delete: if request.auth != null;
     }
     
+    match /settings/{document} {
+      // Allow anybody to read and write blocked slots
+      allow read, write: if true;
+    }
+    
     // Default deny for everything else
     match /{document=**} {
       allow read, write: if false;

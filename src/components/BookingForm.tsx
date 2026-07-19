@@ -8,6 +8,19 @@ import { db } from "../firebase";
 import { cn } from "../lib/utils";
 import { AVAILABLE_TIME_SLOTS, BLOCKED_DATES } from "../config";
 
+const getApiUrl = (endpoint: string) => {
+  if (import.meta.env.VITE_API_URL) {
+    return `${import.meta.env.VITE_API_URL}${endpoint}`;
+  }
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1" || host.endsWith("run.app")) {
+    return endpoint;
+  }
+  // Automatically route custom domains to the live production Cloud Run API container
+  const base = "https://ais-pre-7dx3czfaefni3zdxkayidk-308212599119.us-west2.run.app";
+  return `${base}${endpoint}`;
+};
+
 export function BookingForm() {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,7 +51,7 @@ export function BookingForm() {
       return;
     }
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    fetch(`/api/slots?date=${dateStr}`)
+    fetch(getApiUrl(`/api/slots?date=${dateStr}`))
       .then(res => res.json())
       .then(data => {
         if (data.events) {
@@ -137,7 +150,7 @@ export function BookingForm() {
 
       // 2. Submit to our backend for Calendar Sync (optional)
       try {
-          const response = await fetch("/api/bookings", {
+          const response = await fetch(getApiUrl("/api/bookings"), {
               method: "POST",
               headers: {
                   "Content-Type": "application/json",
@@ -170,8 +183,6 @@ export function BookingForm() {
     const now = new Date();
     const isTodayFlag = dateStr === format(now, 'yyyy-MM-dd');
     
-    if (!isTodayFlag) return true;
-
     // Parse time string (HH:mm AM/PM)
     const [time, modifier] = timeStr.split(' ');
     let [hours, minutes] = time.split(':').map(Number);
@@ -186,8 +197,10 @@ export function BookingForm() {
     const slotDate = new Date(selectedDate);
     slotDate.setHours(hours, minutes, 0, 0);
 
-    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-    if (slotDate <= oneHourFromNow) return false;
+    if (isTodayFlag) {
+      const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+      if (slotDate <= oneHourFromNow) return false;
+    }
 
     // Google Calendar check (assuming 2 hour duration for the slot)
     const slotEnd = new Date(slotDate.getTime() + 2 * 60 * 60 * 1000);
