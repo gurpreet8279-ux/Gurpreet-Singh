@@ -9,9 +9,54 @@ const DATA_FILE = path.join(process.cwd(), "data", "blocked-slots.json");
 type BlockedSlotsRecord = Record<string, string[]>;
 
 let inMemorySlots: BlockedSlotsRecord | null = null;
+let dbInstance: any = null;
+
+async function getFirestoreDb() {
+  if (dbInstance) return dbInstance;
+  try {
+    const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+    try {
+      await fs.access(configPath);
+    } catch {
+      console.warn("firebase-applet-config.json not found, using local JSON storage only.");
+      return null;
+    }
+    const configData = await fs.readFile(configPath, "utf-8");
+    const firebaseConfig = JSON.parse(configData);
+    
+    // Dynamic import to prevent crashes if Firestore is uninitialized or key is missing
+    const { initializeApp } = await import("firebase/app");
+    const { getFirestore } = await import("firebase/firestore");
+    
+    const app = initializeApp(firebaseConfig);
+    dbInstance = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+    return dbInstance;
+  } catch (error) {
+    console.error("Failed to lazy initialize Firebase on server-side:", error);
+    return null;
+  }
+}
 
 async function loadBlockedSlots(): Promise<BlockedSlotsRecord> {
   if (inMemorySlots) return inMemorySlots;
+
+  // Try loading from Firestore
+  const firestoreDb = await getFirestoreDb();
+  if (firestoreDb) {
+    try {
+      const { doc, getDoc } = await import("firebase/firestore");
+      const docRef = doc(firestoreDb, "config", "blocked-slots");
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        inMemorySlots = snap.data().slots || {};
+        return inMemorySlots!;
+      }
+    } catch (error) {
+      console.error("Failed to load blocked slots from Firestore, falling back:", error);
+    }
+  }
+
+  // Fallback to local JSON file
   try {
     const data = await fs.readFile(DATA_FILE, "utf-8");
     inMemorySlots = JSON.parse(data);
@@ -23,7 +68,23 @@ async function loadBlockedSlots(): Promise<BlockedSlotsRecord> {
 
 async function saveBlockedSlots(slots: BlockedSlotsRecord) {
   inMemorySlots = slots;
+
+  // Try saving to Firestore
+  const firestoreDb = await getFirestoreDb();
+  if (firestoreDb) {
+    try {
+      const { doc, setDoc } = await import("firebase/firestore");
+      const docRef = doc(firestoreDb, "config", "blocked-slots");
+      await setDoc(docRef, { slots });
+      console.log("Successfully saved blocked slots to Firestore.");
+    } catch (error) {
+      console.error("Failed to save blocked slots to Firestore:", error);
+    }
+  }
+
+  // Always save locally as fallback and cache
   try {
+    await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
     await fs.writeFile(DATA_FILE, JSON.stringify(slots, null, 2), "utf-8");
   } catch (err) {
     console.error("Failed to write to file", err);

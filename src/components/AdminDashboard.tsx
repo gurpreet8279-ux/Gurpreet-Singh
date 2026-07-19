@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfToday } from "date-fns";
 import { Lock, Trash2, Plus, Calendar as CalendarIcon, ArrowLeft, Clock } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import { AVAILABLE_TIME_SLOTS } from "../config";
@@ -165,14 +165,43 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
               Select Date to Block
             </h2>
             
-            <div className="bg-black border border-zinc-800 rounded-md p-4 mb-6 flex justify-center">
+            <div className="bg-zinc-950 border border-zinc-800 rounded-sm p-4 mb-6 flex justify-center custom-calendar-wrapper">
+              <style>
+                {`
+                  .custom-calendar-wrapper .rdp {
+                    --rdp-accent-color: #D4AF37;
+                    --rdp-background-color: rgba(212, 175, 55, 0.1);
+                    --rdp-day_button: 40px;
+                    --rdp-selected-border: 2px solid var(--rdp-accent-color);
+                    --rdp-outline: 2px solid var(--rdp-accent-color);
+                    margin: 0;
+                  }
+                  .custom-calendar-wrapper .rdp-day_selected, 
+                  .custom-calendar-wrapper .rdp-day_selected:focus-visible, 
+                  .custom-calendar-wrapper .rdp-day_selected:hover {
+                    color: black;
+                    background-color: var(--rdp-accent-color);
+                  }
+                  .custom-calendar-wrapper .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+                     background-color: var(--rdp-background-color);
+                  }
+                  .custom-calendar-wrapper .rdp-day_disabled {
+                     opacity: 0.3;
+                  }
+                  .custom-calendar-wrapper .rdp-day_fullyBlocked {
+                    color: #ef4444 !important;
+                    text-decoration: line-through;
+                    font-weight: bold;
+                  }
+                `}
+              </style>
               <DayPicker
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
-                disabled={[{ before: new Date() }]}
+                disabled={(date) => date < startOfToday()}
                 modifiers={{ fullyBlocked: Object.keys(blockedSlots).filter(d => blockedSlots[d].includes("ALL")).map(d => parseISO(d)) }}
-                modifiersClassNames={{ fullyBlocked: "font-bold text-red-500 line-through" }}
+                modifiersClassNames={{ fullyBlocked: "rdp-day_fullyBlocked" }}
                 className="text-white"
               />
             </div>
