@@ -3,6 +3,8 @@ import { format, parseISO, startOfToday } from "date-fns";
 import { Lock, Trash2, Plus, Calendar as CalendarIcon, ArrowLeft, Clock } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import { AVAILABLE_TIME_SLOTS } from "../config";
+import { db } from "../firebase";
+import { doc, onSnapshot, setDoc } from "firebase/firestore";
 
 export type BlockedSlotsRecord = Record<string, string[]>;
 
@@ -19,13 +21,34 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
     const fetchSlots = async () => {
       try {
         const res = await fetch(`/api/blocked-slots?_t=${Date.now()}`);
-        const data = await res.json();
-        setBlockedSlots(data);
+        if (res.ok) {
+          const data = await res.json();
+          setBlockedSlots(data);
+        }
       } catch (e) {
-        console.error("Could not load blocked slots", e);
+        console.error("Could not load blocked slots from fallback", e);
       }
     };
-    fetchSlots();
+
+    let unsubscribe = () => {};
+    try {
+      const docRef = doc(db, "config", "blocked-slots");
+      unsubscribe = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setBlockedSlots(docSnap.data().slots || {});
+        } else {
+          fetchSlots();
+        }
+      }, (error) => {
+        console.warn("Firestore listener failed in AdminDashboard, falling back:", error);
+        fetchSlots();
+      });
+    } catch (err) {
+      console.warn("Failed to set up Firestore listener in AdminDashboard, falling back:", err);
+      fetchSlots();
+    }
+
+    return () => unsubscribe();
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -40,6 +63,17 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
 
   const saveBlockedSlots = async (slots: BlockedSlotsRecord) => {
     setBlockedSlots(slots);
+
+    // 1. Write to Firestore directly
+    try {
+      const docRef = doc(db, "config", "blocked-slots");
+      await setDoc(docRef, { slots });
+      console.log("Successfully saved slots directly to Firestore.");
+    } catch (e) {
+      console.error("Failed to save to Firestore directly, trying backend api...", e);
+    }
+
+    // 2. Also save to server API to keep local JSON fallback in sync
     try {
       await fetch("/api/blocked-slots", {
         method: "POST",
@@ -47,7 +81,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
         body: JSON.stringify(slots)
       });
     } catch (e) {
-      console.error("Failed to save blocked slots", e);
+      console.error("Failed to save blocked slots fallback", e);
     }
   };
 

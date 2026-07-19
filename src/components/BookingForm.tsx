@@ -5,6 +5,8 @@ import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import { cn } from "../lib/utils";
 import { AVAILABLE_TIME_SLOTS, BLOCKED_DATES } from "../config";
+import { db } from "../firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 
 export function BookingForm() {
   const [submitted, setSubmitted] = useState(false);
@@ -17,22 +19,43 @@ export function BookingForm() {
     const fetchBlockedSlots = async () => {
       try {
         const res = await fetch(`/api/blocked-slots?_t=${Date.now()}`);
-        const data = await res.json();
-        setDynamicBlockedSlots(data);
+        if (res.ok) {
+          const data = await res.json();
+          setDynamicBlockedSlots(data);
+        }
       } catch (e) {
-        console.error("Failed to fetch blocked slots", e);
+        console.error("Failed to fetch blocked slots fallback", e);
       }
     };
-    
-    // Initial fetch
-    fetchBlockedSlots();
-    
-    // Polling mechanism to keep forms up to date without refresh
+
+    // Try listening to Firestore directly
+    let unsubscribe = () => {};
+    try {
+      const docRef = doc(db, "config", "blocked-slots");
+      unsubscribe = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setDynamicBlockedSlots(docSnap.data().slots || {});
+        } else {
+          fetchBlockedSlots();
+        }
+      }, (error) => {
+        console.warn("Firestore listener failed in BookingForm, falling back to polling:", error);
+        fetchBlockedSlots();
+      });
+    } catch (err) {
+      console.warn("Failed to set up Firestore listener in BookingForm, falling back to polling:", err);
+      fetchBlockedSlots();
+    }
+
+    // 10-second backup polling interval
     const interval = setInterval(() => {
       fetchBlockedSlots();
-    }, 5000); // Polling every 5 seconds
-    
-    return () => clearInterval(interval);
+    }, 10000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+    };
   }, []);
 
   const today = startOfToday();
