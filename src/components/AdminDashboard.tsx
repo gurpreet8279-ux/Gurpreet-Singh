@@ -9,7 +9,12 @@ const getApiUrl = (endpoint: string) => {
   if (import.meta.env.VITE_API_URL) {
     return `${import.meta.env.VITE_API_URL}${endpoint}`;
   }
-  return endpoint;
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1" || host.endsWith("run.app")) {
+    return endpoint;
+  }
+  const base = "https://ais-pre-7dx3czfaefni3zdxkayidk-308212599119.us-west2.run.app";
+  return `${base}${endpoint}`;
 };
 
 export type BlockedSlotsRecord = Record<string, string[]>;
