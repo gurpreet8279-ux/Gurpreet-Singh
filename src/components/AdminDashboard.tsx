@@ -2,20 +2,7 @@ import React, { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { Lock, Trash2, Plus, Calendar as CalendarIcon, ArrowLeft, Clock } from "lucide-react";
 import { DayPicker } from "react-day-picker";
-import "react-day-picker/style.css";
 import { AVAILABLE_TIME_SLOTS } from "../config";
-
-const getApiUrl = (endpoint: string) => {
-  if (import.meta.env.VITE_API_URL) {
-    return `${import.meta.env.VITE_API_URL}${endpoint}`;
-  }
-  const host = window.location.hostname;
-  if (host === "localhost" || host === "127.0.0.1" || host.endsWith("run.app")) {
-    return endpoint;
-  }
-  const base = "https://ais-pre-7dx3czfaefni3zdxkayidk-308212599119.us-west2.run.app";
-  return `${base}${endpoint}`;
-};
 
 export type BlockedSlotsRecord = Record<string, string[]>;
 
@@ -24,36 +11,21 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   
-  // Load initial slots from localStorage for instant, zero-latency rendering
-  const [blockedSlots, setBlockedSlots] = useState<BlockedSlotsRecord>(() => {
-    try {
-      const saved = localStorage.getItem("blockedSlots");
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
+  const [blockedSlots, setBlockedSlots] = useState<BlockedSlotsRecord>({});
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("ALL");
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   useEffect(() => {
-    // 1. Load from server-side JSON API
-    const fetchLocalSlots = async () => {
+    const fetchSlots = async () => {
       try {
-        const response = await fetch(getApiUrl("/api/blocked-slots"));
-        if (response.ok) {
-          const data = await response.json();
-          if (data.slots) {
-            setBlockedSlots(data.slots);
-            localStorage.setItem("blockedSlots", JSON.stringify(data.slots));
-          }
-        }
+        const res = await fetch(`/api/blocked-slots?_t=${Date.now()}`);
+        const data = await res.json();
+        setBlockedSlots(data);
       } catch (e) {
-        console.error("Failed to load blocked slots from server-side API:", e);
+        console.error("Could not load blocked slots", e);
       }
     };
-    fetchLocalSlots();
+    fetchSlots();
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -67,32 +39,15 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   };
 
   const saveBlockedSlots = async (slots: BlockedSlotsRecord) => {
-    setSaveStatus("saving");
     setBlockedSlots(slots);
-    
-    // Optimistically save to localStorage for instant client-side persistence
     try {
-      localStorage.setItem("blockedSlots", JSON.stringify(slots));
-    } catch (e) {
-      console.warn("Failed to write to localStorage:", e);
-    }
-
-    // Save to server-side JSON API (highly reliable, persists across refreshes)
-    try {
-      const response = await fetch(getApiUrl("/api/blocked-slots"), {
+      await fetch("/api/blocked-slots", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slots }),
+        body: JSON.stringify(slots)
       });
-      if (response.ok) {
-        setSaveStatus("saved");
-        setTimeout(() => setSaveStatus("idle"), 3000);
-      } else {
-        throw new Error("Server returned non-ok response");
-      }
     } catch (e) {
-      console.error("Failed to save blocked slots to server-side API:", e);
-      setSaveStatus("error");
+      console.error("Failed to save blocked slots", e);
     }
   };
 
@@ -190,28 +145,8 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-8 pb-6 border-b border-zinc-800">
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-heading font-bold text-white">Admin Dashboard</h1>
-              {saveStatus === "saving" && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
-                  Saving...
-                </span>
-              )}
-              {saveStatus === "saved" && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/15 text-green-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                  Saved to Cloud
-                </span>
-              )}
-              {saveStatus === "error" && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/15 text-red-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                  Error Saving
-                </span>
-              )}
-            </div>
-            <p className="text-zinc-400 text-sm mt-1">Manage your schedule and blocked time slots</p>
+            <h1 className="text-3xl font-heading font-bold text-white mb-2">Admin Dashboard</h1>
+            <p className="text-zinc-400 text-sm">Manage your schedule and blocked time slots</p>
           </div>
           <button 
             onClick={onBack}
@@ -230,51 +165,14 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
               Select Date to Block
             </h2>
             
-            <div className="bg-black border border-zinc-800 rounded-md p-4 mb-6 flex justify-center custom-calendar-wrapper">
-              <style>
-                {`
-                  .custom-calendar-wrapper .rdp {
-                    --rdp-accent-color: #D4AF37;
-                    --rdp-background-color: rgba(212, 175, 55, 0.1);
-                    --rdp-day_button: 40px;
-                    --rdp-selected-border: 2px solid var(--rdp-accent-color);
-                    --rdp-outline: 2px solid var(--rdp-accent-color);
-                    margin: 0;
-                  }
-                  .custom-calendar-wrapper .rdp-day_selected, 
-                  .custom-calendar-wrapper .rdp-day_selected:focus-visible, 
-                  .custom-calendar-wrapper .rdp-day_selected:hover {
-                    color: black !important;
-                    background-color: var(--rdp-accent-color) !important;
-                  }
-                  .custom-calendar-wrapper .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
-                     background-color: var(--rdp-background-color);
-                  }
-                  .custom-calendar-wrapper .rdp-day_disabled {
-                     opacity: 0.3;
-                  }
-                  .custom-calendar-wrapper .fully-blocked-day {
-                     color: #ef4444 !important;
-                     text-decoration: line-through !important;
-                     font-weight: bold !important;
-                  }
-                `}
-              </style>
+            <div className="bg-black border border-zinc-800 rounded-md p-4 mb-6 flex justify-center">
               <DayPicker
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
-                disabled={(date) => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  return date < today;
-                }}
-                modifiers={{
-                  fullyBlocked: Object.keys(blockedSlots).filter(d => blockedSlots[d].includes("ALL")).map(d => parseISO(d))
-                }}
-                modifiersClassNames={{
-                  fullyBlocked: "fully-blocked-day"
-                }}
+                disabled={[{ before: new Date() }]}
+                modifiers={{ fullyBlocked: Object.keys(blockedSlots).filter(d => blockedSlots[d].includes("ALL")).map(d => parseISO(d)) }}
+                modifiersClassNames={{ fullyBlocked: "font-bold text-red-500 line-through" }}
                 className="text-white"
               />
             </div>

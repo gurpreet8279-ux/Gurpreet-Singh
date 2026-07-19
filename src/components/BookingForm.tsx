@@ -6,67 +6,34 @@ import "react-day-picker/style.css";
 import { cn } from "../lib/utils";
 import { AVAILABLE_TIME_SLOTS, BLOCKED_DATES } from "../config";
 
-const getApiUrl = (endpoint: string) => {
-  if (import.meta.env.VITE_API_URL) {
-    return `${import.meta.env.VITE_API_URL}${endpoint}`;
-  }
-  const host = window.location.hostname;
-  if (host === "localhost" || host === "127.0.0.1" || host.endsWith("run.app")) {
-    return endpoint;
-  }
-  const base = "https://ais-pre-7dx3czfaefni3zdxkayidk-308212599119.us-west2.run.app";
-  return `${base}${endpoint}`;
-};
-
 export function BookingForm() {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [dynamicBlockedSlots, setDynamicBlockedSlots] = useState<Record<string, string[]>>(() => {
-    try {
-      const saved = localStorage.getItem("blockedSlots");
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
-  const [googleEvents, setGoogleEvents] = useState<{start: string, end: string}[]>([]);
+  const [dynamicBlockedSlots, setDynamicBlockedSlots] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
-    // 1. Initial fetch from server-side API (highly reliable)
-    const fetchLocalSlots = async () => {
+    const fetchBlockedSlots = async () => {
       try {
-        const response = await fetch(getApiUrl("/api/blocked-slots"));
-        if (response.ok) {
-          const data = await response.json();
-          if (data.slots) {
-            setDynamicBlockedSlots(data.slots);
-            localStorage.setItem("blockedSlots", JSON.stringify(data.slots));
-          }
-        }
+        const res = await fetch(`/api/blocked-slots?_t=${Date.now()}`);
+        const data = await res.json();
+        setDynamicBlockedSlots(data);
       } catch (e) {
-        console.error("Failed to load blocked slots from server-side API:", e);
+        console.error("Failed to fetch blocked slots", e);
       }
     };
-    fetchLocalSlots();
+    
+    // Initial fetch
+    fetchBlockedSlots();
+    
+    // Polling mechanism to keep forms up to date without refresh
+    const interval = setInterval(() => {
+      fetchBlockedSlots();
+    }, 5000); // Polling every 5 seconds
+    
+    return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    if (!selectedDate) {
-      setGoogleEvents([]);
-      return;
-    }
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    fetch(getApiUrl(`/api/slots?date=${dateStr}`))
-      .then(res => res.json())
-      .then(data => {
-        if (data.events) {
-          setGoogleEvents(data.events);
-        }
-      })
-      .catch(err => console.error("Error fetching Google Calendar slots", err));
-  }, [selectedDate]);
 
   const today = startOfToday();
 
@@ -94,85 +61,27 @@ export function BookingForm() {
     formData.append("Service_Time", selectedTime);
 
     const object = Object.fromEntries(formData);
-    
-    // Parse time block to pass valid ISO start/end to backend
-    const [startHour, startMinuteStr, ampm] = selectedTime.split(/[:\s]/);
-    let hour = parseInt(startHour);
-    if (ampm === "PM" && hour < 12) hour += 12;
-    if (ampm === "AM" && hour === 12) hour = 0;
-    
-    const startDateTime = new Date(selectedDate);
-    startDateTime.setHours(hour, parseInt(startMinuteStr), 0);
-    const endDateTime = new Date(startDateTime.getTime() + 2 * 60 * 60 * 1000); // 2-hour duration
-    
-    const apiPayload = {
-      name: object.name,
-      email: object.email,
-      phone: object.phone,
-      serviceType: object.package,
-      vehicleDetails: `${object['vehicle-make']} - ${object['vehicle-type']}`,
-      address: object.address,
-      startTime: startDateTime.toISOString(),
-      endTime: endDateTime.toISOString(),
-      displayDate: object.Service_Date,
-      displayTime: object.Service_Time
-    };
+    const json = JSON.stringify(object);
 
     try {
-      // 1. Submit to Web3Forms directly from the browser (to avoid server-side IP block)
-      const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || "fea02e2e-c9c0-463e-a4f1-8cb7a88fe74e";
-      const emailData = {
-        access_key: accessKey,
-        subject: `New Booking Request from ${apiPayload.name}`,
-        from_name: "Durham's Crown Mobile Detailing Bookings",
-        name: apiPayload.name,
-        email: apiPayload.email || "",
-        phone: apiPayload.phone,
-        package: apiPayload.serviceType,
-        vehicle: apiPayload.vehicleDetails,
-        address: apiPayload.address,
-        Service_Date: apiPayload.displayDate,
-        Service_Time: apiPayload.displayTime
-      };
-
-      try {
-          const w3fResponse = await fetch("https://api.web3forms.com/submit", {
-              method: "POST",
-              headers: {
-                  "Content-Type": "application/json",
-                  Accept: "application/json"
-              },
-              body: JSON.stringify(emailData)
-          });
-          const text = await w3fResponse.text();
-          try {
-              const w3fResult = JSON.parse(text);
-              console.log("Web3Forms client result:", w3fResult);
-          } catch (e) {
-              console.warn("Web3Forms returned non-JSON:", text);
-          }
-      } catch (err) {
-          console.error("Web3Forms client failed:", err);
+      const response = await fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json"
+          },
+          body: json
+      });
+      const result = await response.json();
+      if (result.success) {
+          setSubmitted(true);
+      } else {
+          console.error(result);
+          alert(`Submission failed: ${result.message || 'Please try again.'}`);
       }
-
-      // 2. Submit to our backend for Calendar Sync (optional)
-      try {
-          const response = await fetch(getApiUrl("/api/bookings"), {
-              method: "POST",
-              headers: {
-                  "Content-Type": "application/json",
-              },
-              body: JSON.stringify(apiPayload)
-          });
-          console.log("Backend status:", response.status);
-      } catch (err) {
-          console.warn("Backend sync failed. Continuing since Web3Forms handles emails.");
-      }
-
-      setSubmitted(true);
-    } catch (error: any) {
+    } catch (error) {
         console.error(error);
-        alert(`Something went wrong! Error: ${error.message}`);
+        alert("Something went wrong! Please check your connection and try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -190,6 +99,8 @@ export function BookingForm() {
     const now = new Date();
     const isTodayFlag = dateStr === format(now, 'yyyy-MM-dd');
     
+    if (!isTodayFlag) return true;
+
     // Parse time string (HH:mm AM/PM)
     const [time, modifier] = timeStr.split(' ');
     let [hours, minutes] = time.split(':').map(Number);
@@ -204,24 +115,9 @@ export function BookingForm() {
     const slotDate = new Date(selectedDate);
     slotDate.setHours(hours, minutes, 0, 0);
 
-    if (isTodayFlag) {
-      const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-      if (slotDate <= oneHourFromNow) return false;
-    }
+    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
 
-    // Google Calendar check (assuming 2 hour duration for the slot)
-    const slotEnd = new Date(slotDate.getTime() + 2 * 60 * 60 * 1000);
-    for (const event of googleEvents) {
-      if (!event.start || !event.end) continue;
-      const eventStart = new Date(event.start);
-      const eventEnd = new Date(event.end);
-      // Overlap logic: slotStart < eventEnd && slotEnd > eventStart
-      if (slotDate < eventEnd && slotEnd > eventStart) {
-        return false;
-      }
-    }
-
-    return true;
+    return slotDate > oneHourFromNow;
   };
 
   return (
