@@ -67,17 +67,34 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="mt-12 flex flex-wrap items-center gap-6"
+            className="mt-12 flex flex-col sm:flex-row items-start sm:items-center gap-8"
           >
-            <a
-              href="#booking"
-              className="bg-transparent border border-gold-400 text-gold-300 hover:bg-gold-500 hover:text-black hover:border-gold-500 block rounded-none px-8 py-4 text-center text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500 uppercase tracking-[0.2em] transition-all"
-            >
-              Reserve An Appointment
-            </a>
-            <a href="#services" className="text-xs font-semibold leading-6 text-zinc-300 hover:text-gold-400 transition-colors uppercase tracking-[0.2em]">
-              Explore Services <span aria-hidden="true" className="ml-2 font-normal">→</span>
-            </a>
+            <div className="flex flex-wrap items-center gap-4">
+              <a
+                href="#booking"
+                className="bg-gold-500 border border-gold-500 text-black hover:bg-gold-400 block rounded-none px-8 py-4 text-center text-xs font-semibold uppercase tracking-[0.2em] transition-all"
+              >
+                Book Now
+              </a>
+              <a
+                href="tel:437-663-3998"
+                className="bg-transparent border border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-500 block rounded-none px-8 py-4 text-center text-xs font-semibold uppercase tracking-[0.2em] transition-all"
+              >
+                Contact
+              </a>
+            </div>
+            
+            <div className="flex flex-col items-start sm:ml-4 sm:border-l sm:border-zinc-800 sm:pl-8">
+              <span className="text-zinc-500 text-[10px] uppercase tracking-[0.25em] mb-2 font-medium">Direct Line</span>
+              <a href="tel:437-663-3998" className="text-zinc-300 text-base font-light hover:text-gold-400 transition-colors flex items-center gap-3">
+                <span className="bg-zinc-900/50 p-2 border border-zinc-800">
+                  <svg className="h-4 w-4 text-gold-500" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-2.896-1.596-5.273-3.973-6.869-6.869l1.293-.97c.362-.271.527-.733.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+                  </svg>
+                </span>
+                <span className="tracking-widest">437-663-3998</span>
+              </a>
+            </div>
           </motion.div>
         </div>
         
